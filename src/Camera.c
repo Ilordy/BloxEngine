@@ -7,6 +7,7 @@ void camera_init(Camera* cam, float fov)
 	glm_mat4_identity(cam->projecionMatrix);
 	cam->fov = fov;
 	camera_setProjection(cam, PERSPECTIVE);
+	
 }
 
 void camera_setProjection(Camera* cam, CameraProjectionType projType)

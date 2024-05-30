@@ -107,6 +107,7 @@ blxWindow* blxCreateWindow(unsigned int width, unsigned int height)
     HGLRC rc = wglCreateContext(dc);
     wglMakeCurrent(dc, rc);
 
+
     // TODO: remove from here
     if (glewInit() == GLEW_OK) {
         printf("GLEW INIT!!");
@@ -126,8 +127,6 @@ blxWindow* blxCreateWindow(unsigned int width, unsigned int height)
     SetProp(hWnd, "BLXWindow", window);
     return (blxWindow*)window;
 }
-
-
 
 blxBool blxWindowShouldClose(blxWindow* window)
 {

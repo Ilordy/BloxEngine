@@ -24,3 +24,10 @@ typedef unsigned char blxBool;
 #define BLXAPI
 #endif
 #endif
+
+#ifdef _MSC_VER
+#define WIN32
+#endif
+#ifdef _GNUC
+#define LINUX
+#endif

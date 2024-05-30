@@ -14,7 +14,7 @@ DIRECTORIES := \$(DIR) $(subst $(DIR),,$(shell dir $(DIR) /S/ AD/ B | findstr /i
 
 CFLAGS := -Wall -fdeclspec -Wno-inconsistent-dllimport
 DEFINES := -DGLEW_STATIC -D_CRT_SECURE_NO_WARNINGS -DBLXEXPORT 
-INCLUDE_FLAGS := -IDependencies\CGLM\include -IDependencies\GLEW\include -IDependencies\GLFW\include -Isrc\vendor\stb_image
+INCLUDE_FLAGS := -IDependencies\CGLM\include -IDependencies\GLEW\include -IDependencies\GLFW\include -Isrc\vendor\stb_image -Isrc
 LINKER_FLAGS := -shared -lDependencies\GLEW\lib\Release\x64\glew32s -lDependencies\GLFW\lib-vc2022\glfw3_mt -lopengl32 -luser32 -lGdi32 -lkernel32 -llibcmt -lShell32
 
 all: configure scaffold compile link
@@ -40,7 +40,8 @@ scaffold:
 	@xcopy Dependencies\GLFW\include\GLFW $(INCLUDES_DIR)\GLFW /s /e /i /q /y
 	@xcopy Dependencies\GLEW\include\GL $(INCLUDES_DIR)\GL /s /e /i /q /y
 	@xcopy Dependencies\CGLM\include\cglm $(INCLUDES_DIR)\cglm /s /e /i /q /y
-	@xcopy "src\*.h" $(INCLUDES_DIR)\BLX /s /e /i /q /y
+	@xcopy "src\*.h" $(INCLUDES_DIR)\BLX /s /e /i /q /y 
+	@rmdir /s /q "$(INCLUDES_DIR)\BLX\internal
 	@echo Done.
 
 .PHONY: link
