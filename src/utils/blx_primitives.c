@@ -1,118 +1,280 @@
 #include "blx_rendering.h"
 #include "blx_primitives.h"
-//TODO: ADD SUPPORT FOR NORMALS
 
-// float cubeData[] = {
-//     //vertex positions                       //UV Cords
-//     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-//      0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-//      0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-//      0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-//     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-//     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+blxMesh* blxCubeMesh() {
+    blxMesh* mesh = (blxMesh*)malloc(sizeof(blxMesh));
+    blxInitMesh(mesh);
+    mesh->vertices = blxInitListWithSize(vList_blxVertex, 36);
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+        //position
+    {   -0.5f, -0.5f, -0.5f,
+        //normal
+        0.0f, 0.0f, -1.0f,
+        //uv
+        0.0f, 0.0f
+    }));
 
-//     -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-//      0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-//      0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-//      0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-//     -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-//     -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, -0.5f, -0.5f,
+        0.0f, 0.0f, -1.0f,
+        1.0f, 0.0f
+    }));
 
-//     -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//     -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-//     -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//     -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//     -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-//     -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, 0.5f, -0.5f,
+        0.0f, 0.0f, -1.0f,
+        1.0f, 1.0f
+    }));
 
-//      0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//      0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-//      0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//      0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//      0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-//      0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, 0.5f, -0.5f,
+        0.0f, 0.0f, -1.0f,
+        1.0f, 1.0f
+    }));
 
-//     -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//      0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-//      0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-//      0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-//     -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-//     -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, 0.5f, -0.5f,
+        0.0f, 0.0f, -1.0f,
+        0.0f, 1.0f
+    }));
 
-//     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-//      0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-//      0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//      0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//     -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-//     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-// };
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, -0.5f, -0.5f,
+        0.0f, 0.0f, -1.0f,
+        0.0f, 0.0f
+    }));
 
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, -0.5f, 0.5f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f
+    }));
 
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, -0.5f, 0.5f,
+        0.0f, 0.0f, 1.0f,
+        1.0f, 0.0f
+    }));
 
-// float t2[] = {
-//     //pos                 //normals          //uv
-//      -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f,
-//     1.0f, -1.0f,  1.0f,   0.0f, 0.0f, 1.0f,  1.0f, 0.0f,
-//     -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, 1.0f,
-//     1.0f,  1.0f,  1.0f,   1.0f,  0.0f, 0.0f, 1.0f, 1.0f,
-//     -1.0f, -1.0f, -1.0f,  0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-//     1.0f, -1.0f, -1.0f,   1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
-//     -1.0f,  1.0f, -1.0f,  -1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
-//     1.0f,  1.0f, -1.0f,   0.0f,  0.0f, -1.0f,  1.0f, 1.0f
-// };
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, 0.5f, 0.5f,
+        0.0f, 0.0f, 1.0f,
+        1.0f, 1.0f
+    }));
 
-blxModel* MakeCube() {
-    blxMesh mesh;
-    blxModel* model = (blxModel*)malloc(sizeof(blxModel));
-    //8 verts for a cube
-    mesh.vertices = blxInitListWithSize(vList_blxVertex, 8);
-    mesh.vertices[0] = (blxVertex){ -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f };
-    mesh.vertices[1] = (blxVertex){ 1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f };
-    mesh.vertices[2] = (blxVertex){ -1.0f,  1.0f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f };
-    mesh.vertices[3] = (blxVertex){ -1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f };
-    mesh.vertices[4] = (blxVertex){ -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f };
-    mesh.vertices[5] = (blxVertex){ 1.0f, -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f };
-    mesh.vertices[6] = (blxVertex){ -1.0f,  1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f };
-    mesh.vertices[7] = (blxVertex){ 1.0f,  1.0f, -1.0f,  0.0f, 0.0f, -1.0f, 1.0f, 1.0f };
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, 0.5f, 0.5f,
+        0.0f, 0.0f, 1.0f,
+        1.0f, 1.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, 0.5f, 0.5f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 1.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, -0.5f, 0.5f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, 0.5f, 0.5f,
+        -1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, 0.5f, -0.5f,
+        -1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, -0.5f, -0.5f,
+        -1.0f, 0.0f, 0.0f,
+        1.0f, 1.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, -0.5f, -0.5f,
+        -1.0f, 0.0f, 0.0f,
+        1.0f, 1.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, -0.5f, 0.5f,
+        -1.0f, 0.0f, 0.0f,
+        0.0f, 1.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, 0.5f, 0.5f,
+        -1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, 0.5f, 0.5f,
+        1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, 0.5f, -0.5f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, -0.5f, -0.5f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 1.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, -0.5f, -0.5f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 1.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, -0.5f, 0.5f,
+        1.0f, 0.0f, 0.0f,
+        0.0f, 1.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, 0.5f, 0.5f,
+        1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, -0.5f, -0.5f,
+        0.0f, -1.0f, 0.0f,
+        0.0f, 0.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, -0.5f, -0.5f,
+        0.0f, -1.0f, 0.0f,
+        1.0f, 0.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, -0.5f, 0.5f,
+        0.0f, -1.0f, 0.0f,
+        1.0f, 1.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, -0.5f, 0.5f,
+        0.0f, -1.0f, 0.0f,
+        1.0f, 1.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, -0.5f, 0.5f,
+        0.0f, -1.0f, 0.0f,
+        0.0f, 1.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, -0.5f, -0.5f,
+        0.0f, -1.0f, 0.0f,
+        0.0f, 0.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, 0.5f, -0.5f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, 0.5f, -0.5f,
+        0.0f, 1.0f, 0.0f,
+        1.0f, 0.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, 0.5f, 0.5f,
+        0.0f, 1.0f, 0.0f,
+        1.0f, 1.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {   0.5f, 0.5f, 0.5f,
+        0.0f, 1.0f, 0.0f,
+        1.0f, 1.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, 0.5f, 0.5f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f
+    }));
+
+    blxAddValueToList(mesh->vertices, ((blxVertex)
+    {  -0.5f, 0.5f, -0.5f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f
+    }));
     //36 indices -> 12 triangles or faces
-    mesh.indices = blxInitListWithSize(vList_indices, 36);
-    mesh.indices[0] = 2;
-    mesh.indices[1] = 6;
-    mesh.indices[2] = 7;
-    mesh.indices[3] = 2;
-    mesh.indices[4] = 3;
-    mesh.indices[5] = 7;
-    mesh.indices[6] = 0;
-    mesh.indices[7] = 4;
-    mesh.indices[8] = 5;
-    mesh.indices[9] = 0;
-    mesh.indices[10] = 1;
-    mesh.indices[11] = 5;
-    mesh.indices[12] = 0;
-    mesh.indices[13] = 2;
-    mesh.indices[14] = 6;
-    mesh.indices[15] = 0;
-    mesh.indices[16] = 4;
-    mesh.indices[17] = 6;
-    mesh.indices[18] = 1;
-    mesh.indices[19] = 3;
-    mesh.indices[20] = 7;
-    mesh.indices[21] = 1;
-    mesh.indices[22] = 5;
-    mesh.indices[23] = 7;
-    mesh.indices[24] = 0;
-    mesh.indices[25] = 2;
-    mesh.indices[26] = 3;
-    mesh.indices[27] = 0;
-    mesh.indices[28] = 1;
-    mesh.indices[29] = 3;
-    mesh.indices[30] = 4;
-    mesh.indices[31] = 6;
-    mesh.indices[32] = 7;
-    mesh.indices[33] = 4;
-    mesh.indices[34] = 5;
-    mesh.indices[35] = 7;
-    transform_init(&model->transform);
-    model->mesh = mesh;
-    return model;
+    unsigned int* indices = (unsigned int*)malloc(sizeof(unsigned int) * 36);
+  // Front face
+    indices[0] = 0;
+    indices[1] = 1;
+    indices[2] = 2;
+    indices[3] = 4;
+    indices[4] = 2;
+    indices[5] = 0;
+
+    // Back face
+    indices[6] = 6;
+    indices[7] = 7;
+    indices[8] = 8;
+    indices[9] = 10;
+    indices[10] = 8;
+    indices[11] = 6;
+
+    // Left face
+    indices[12] = 0;
+    indices[13] = 6;
+    indices[14] = 10;
+    indices[15] = 10;
+    indices[16] = 4;
+    indices[17] = 0;
+
+    // Right face
+    indices[18] = 1;
+    indices[19] = 7;
+    indices[20] = 8;
+    indices[21] = 8;
+    indices[22] = 2;
+    indices[23] = 1;
+
+    // Bottom face
+    indices[24] = 0;
+    indices[25] = 1;
+    indices[26] = 6;
+    indices[27] = 6;
+    indices[28] = 7;
+    indices[29] = 1;
+
+    // Top face
+    indices[30] = 2;
+    indices[31] = 8;
+    indices[32] = 10;
+    indices[33] = 10;
+    indices[34] = 4;
+    indices[35] = 2;
+    mesh->indices = blxInitListWithSize(vList_indices, 36);
+    blxAddArrayToList(mesh->indices, indices, 36);
+    free(indices);
+    blxUpdateMesh(mesh);
+    return mesh;
 }

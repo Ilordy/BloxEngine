@@ -4,5 +4,5 @@
 
 void OpenGLDraw(blxMesh* mesh);
 void OpenGLInit();
-blxMesh* OpenGLCreateMesh();
+void OpenGLInitMesh(blxMesh* mesh);
 void OpenGLUpdateMesh(blxMesh* mesh);
