@@ -7,3 +7,5 @@ typedef struct {
     Transform transform;
     blxMesh mesh;
 }blxModel;
+
+BLXAPI void blxInitModel(blxModel* model);
