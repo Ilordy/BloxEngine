@@ -125,6 +125,7 @@ blxWindow* blxCreateWindow(unsigned int width, unsigned int height)
     printf("OpenGL Version: %d.%d", versionMajor, versionMinor);
     window->context = context;
     SetProp(hWnd, "BLXWindow", window);
+    glEnable(GL_DEPTH_TEST);
     return (blxWindow*)window;
 }
 
@@ -139,10 +140,21 @@ blxBool blxWindowShouldClose(blxWindow* window)
     }
 
     //TODO: abstract this away probably into a renderer.
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    SwapBuffers(win32Win->hdc);
+    // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     return win32Win->shouldClose;
+}
+
+void blxSwapBuffers(blxWindow* window)
+{
+    blxWin32Window* win32Win = (blxWin32Window*)window;
+    SwapBuffers(win32Win->hdc);
+}
+
+void blxWindowClear()
+{
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void blxTerminateWindow(blxWindow* window)

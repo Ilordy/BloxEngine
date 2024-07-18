@@ -87,6 +87,8 @@ Shader shader_create(const char* fragPath, const char* vertPath, GLboolean useSh
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
 	glLinkProgram(shaderProgram);
+	// TODO: ERROR IS HERE ON LINE 91, PLS FIX!
+	//Use glGetProgramiv instead of shaderiv.
 	if (shader_checkError(shaderProgram, GL_LINK_STATUS))
 	{
 		return -1;
@@ -128,6 +130,11 @@ void shader_setFloat4f(Shader shader, const char* name, vec4 value)
 void shader_setMatrix4f(Shader shader, const char* name, mat4 mat)
 {
 	glUniformMatrix4fv(shader_getUniform(shader, name), 1, GL_FALSE, mat);
+}
+
+void shader_setVec3(Shader shader, const char* name, vec3 value) 
+{
+	glUniform3f(shader_getUniform(shader, name), value[0], value[1], value[2]);
 }
 
 void shader_useShader(Shader shader)

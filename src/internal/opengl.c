@@ -16,6 +16,7 @@ void OpenGLInit()
         printf("GLEW Failed to initialize\n");
         //return -1; cant return values, maybe try exit();
     }
+
 }
 
 void OpenGLDraw(blxMesh* mesh)

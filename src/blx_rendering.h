@@ -1,18 +1,18 @@
 #pragma once
 #include "Defines.h"
 #include "Transform.h"
-#include "cglm/cglm.h"
 #include "utils/blx_vlist.h"
 #include "Shader.h"
+#include "cglm/struct/vec3.h"
 
 typedef enum {
     OPENGL
 }GraphicsAPI;
 
 typedef struct {
-    vec3 position;
-    vec3 normal;
-    vec2 uv;
+    vec3s position;
+    vec3s normal;
+    vec2s uv;
 }blxVertex;
 
 typedef blxVertex vList_blxVertex;
@@ -24,12 +24,15 @@ typedef struct {
     Shader shader;
     /// @brief Internal use only
     void* _meshData;
-}blxMesh;
+} blxMesh;
 
 BLXAPI void blxInitRenderer(GraphicsAPI graphicsToUse);
-BLXAPI blxMesh* blxCreateMesh();
+BLXAPI void blxInitMesh(blxMesh* mesh);
+
+//TODO: Make a blx_mesh.h instead..
 BLXAPI void blxDraw(blxMesh* mesh);
 BLXAPI void blxUpdateMesh(blxMesh* mesh);
+BLXAPI void blxImportMesh(const char* filePath, blxMesh* outMesh);
 
 
 

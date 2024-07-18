@@ -15,3 +15,4 @@ BLXAPI void shader_setFloat4f(Shader shader, const char* name, vec4 value);
 BLXAPI void shader_setMatrix4f(Shader shader, const char* name, mat4 mat);
 BLXAPI void shader_useShader(Shader shader);
 BLXAPI void shader_useTexture(Shader shader, Texture* texture, const char* samplerName);
+BLXAPI void shader_setVec3(Shader shader, const char* name, vec3 value);

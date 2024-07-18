@@ -1,5 +1,18 @@
 #pragma once
+#include <vcruntime_string.h>
+
 #include "../Defines.h"
+
+/// @brief Initalizes a linked node. Useful for creating a linked node from a literal.
+/// @param linkedNodePtr This should be a blxLinkedNode pointer.
+/// @param value literal value to give.
+#define blxInitLinkedNode(linkedNodePtr, value)\
+{\
+    linkedNodePtr = (blxLinkedNode*)malloc(sizeof(blxLinkedNode));\
+    typeof(value)* temp = (typeof(value)*)malloc(sizeof(value));\
+    *temp = value;\
+    result->value = temp;\
+}
 
 /// @brief Allocates memory to append a literal to the end of the list.
 /// @param head The start of the linked list.
@@ -19,6 +32,7 @@
 struct blxLinkedNode {
     struct blxLinkedNode* next;
     void* value;
+    size_t _valueSize;
 };
 /// @brief Structure for interacting with linked lists.
 typedef struct blxLinkedNode blxLinkedNode;
@@ -34,7 +48,7 @@ static blxLinkedNode* blxCreateLinkedNode(void* value)
     return result;
 }
 
-/// @brief Appends a new node to a linked list.
+/// @brief Appends a new node to the end of a linked list.
 /// @param head The start of the list.
 /// @param value Pointer to the value the new node should have.
 /// @return The newly created node.

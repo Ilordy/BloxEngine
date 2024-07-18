@@ -225,7 +225,9 @@ blxMesh* blxCubeMesh() {
     }));
     //36 indices -> 12 triangles or faces
     unsigned int* indices = (unsigned int*)malloc(sizeof(unsigned int) * 36);
-  // Front face
+
+    // TODO: Fix normals! Some indices are incorrect for the corresponding normal!
+    // Front face
     indices[0] = 0;
     indices[1] = 1;
     indices[2] = 2;

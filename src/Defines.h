@@ -6,8 +6,10 @@
 #define Vec3_Up (vec3){0.0f, 1.0f, 0.0f}
 #define Vec3_Forward (vec3){0.0f, 0.0f, -1.0f} //Negated due to openGL being a right handed coord system. 
 #define Vec3_Right (vec3){-1.0f, 0.0f, 0.0f} //Negated due to openGL being a right handed coord system. 
-#define PRINTVEC3(vec) printf("(%f, %f, %f)\n", vec[0], vec[1], vec[2]);
-
+#define PRINTVEC3(vec) printf("(%f, %f, %f)\n", vec[0], vec[1], vec[2])
+#define PRINTVEC3S(vec) printf("(%f, %f, %f)\n", vec.x, vec.y, vec.z)
+#define PRINTVEC2(vec) printf("(%f, %f)\n", vec[0], vec[1])
+#define PRINTVEC2S(vec) printf("(%f, %f)\n", vec.x, vec.y)
 typedef unsigned char blxBool;
 
 #ifdef BLXEXPORT
