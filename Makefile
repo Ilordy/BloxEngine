@@ -28,7 +28,7 @@ else
 	@echo building in DEBUG mode
 	$(eval CFLAGS += -g)
 	$(eval LINKER_FLAGS += -g)
-	$(eval DEFINES += -D_DEBUG)
+	$(eval DEFINES += -DBLX_DEBUG)
 endif
 
 .PHONY: scaffold
