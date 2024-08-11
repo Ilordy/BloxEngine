@@ -4,9 +4,12 @@
 #define BLXWIN32
 
 //#ifdef BLXWIN32
+#include "blx_input.h"
+
 #include <Windows.h>
 #include <windowsx.h>
 #include <time.h>
+
 typedef struct
 {
     HINSTANCE hInstance;
@@ -161,12 +164,14 @@ LRESULT CALLBACK WindowMsgProcess(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_KEYUP:
         case WM_SYSKEYUP: {
             blxBool pressed = (uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN);
-            //Input processing goes here.
+            blxKeyBoardInputs key = (short)wParam;
+            //Simple for windows however will need to be translated for other platforms.
+            _blxInputProcessKey(key, pressed);
         }break;
         case WM_MOUSEMOVE: {
             int x = GET_X_LPARAM(lParam);
             int y = GET_Y_LPARAM(lParam);
-           //Mouse move event.
+            _blxInputProcessMouseMove(x, y);
 
         }break;
         case WM_MOUSEWHEEL: {
@@ -174,6 +179,7 @@ LRESULT CALLBACK WindowMsgProcess(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             //something has happened if not 0
             if (wheelDelta != 0) {
                 wheelDelta = (wheelDelta < 0) ? -1 : 1;
+                _blxInputProcessMouseWheel(wheelDelta);
             }
         }break;
         case WM_LBUTTONDOWN:
@@ -183,7 +189,26 @@ LRESULT CALLBACK WindowMsgProcess(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_MBUTTONUP:
         case WM_RBUTTONUP: {
             blxBool pressed = uMsg == WM_LBUTTONDOWN || uMsg == WM_RBUTTONDOWN || uMsg == WM_MBUTTONDOWN;
+            //setting to default
+            blxMouseButtonInputs button = _BLX_BUTTON_MAX_BUTTONS;
+            switch (uMsg) {
+                case WM_LBUTTONDOWN:
+                case WM_LBUTTONUP:
+                    button = BLX_LMB;
+                    break;
+                case WM_MBUTTONDOWN:
+                case WM_MBUTTONUP:
+                    button = BLX_MMB;
+                    break;
+                case WM_RBUTTONDOWN:
+                case WM_RBUTTONUP:
+                    button = BLX_RMB;
+                    break;
+            }
 
+            if (button != _BLX_BUTTON_MAX_BUTTONS) {
+                _blxInputProcessMouseButton(button, pressed);
+            }
         }break;
     }
 

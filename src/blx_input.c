@@ -76,7 +76,7 @@ void _blxInputProcessMouseWheel(char delta)
 }
 
 
-blxBool blxInputIsKeyDown(blxKeyBoardInputs key)
+blxBool blxInputGetKey(blxKeyBoardInputs key)
 {
     if (!initialized) {
         return BLX_FALSE;
@@ -85,31 +85,85 @@ blxBool blxInputIsKeyDown(blxKeyBoardInputs key)
     return state.keyboardCurrentState.keys[key] == BLX_TRUE;
 }
 
-blxBool blxInputIsKeyUp(blxKeyBoardInputs key)
+blxBool blxInputWasKeyDown(blxKeyBoardInputs key)
 {
     if (!initialized) {
         return BLX_FALSE;
     }
 
-    return state.keyboardCurrentState.keys[key] == BLX_FALSE;
+    return state.keyboardPrevState.keys[key] == BLX_TRUE;
 }
 
-blxBool blxIsMouseButtonDown(blxMouseButtonInputs button)
+blxBool blxInputGetKeyUp(blxKeyBoardInputs key)
 {
     if (!initialized) {
         return BLX_FALSE;
     }
 
-    return state.mouseCurrentState.buttons[button] == BLX_FALSE;
+    return state.keyboardPrevState.keys[key] == BLX_TRUE && state.keyboardCurrentState.keys[key] == BLX_FALSE;
 }
 
-blxBool blxIsMouseButtonUp(blxMouseButtonInputs button)
+blxBool blxInputWasKeyUp(blxKeyBoardInputs key)
 {
     if (!initialized) {
         return BLX_FALSE;
     }
 
-    return state.mouseCurrentState.buttons[button] == BLX_FALSE;
+    return state.keyboardPrevState.keys[key] == BLX_FALSE;
+}
+
+blxBool blxGetMouseButtonDown(blxMouseButtonInputs button)
+{
+    if (!initialized) {
+        return BLX_FALSE;
+    }
+
+    return state.mousePrevState.buttons[button] == BLX_FALSE && state.mouseCurrentState.buttons[button] == BLX_TRUE;
+}
+
+blxBool blxInputGetMouseButton(blxMouseButtonInputs button)
+{
+    if (!initialized) {
+        return BLX_FALSE;
+    }
+
+    return state.mouseCurrentState.buttons[button] == BLX_TRUE;
+}
+
+blxBool blxWasMouseButtonDown(blxMouseButtonInputs button)
+{
+    if (!initialized) {
+        return BLX_FALSE;
+    }
+
+    return state.mousePrevState.buttons[button] == BLX_TRUE;
+}
+
+blxBool blxGetMouseButtonUp(blxMouseButtonInputs button)
+{
+    if (!initialized) {
+        return BLX_FALSE;
+    }
+
+    return state.mousePrevState.buttons[button] == BLX_TRUE && state.mouseCurrentState.buttons[button] == BLX_FALSE;
+}
+
+blxBool blxWasMouseButtonUp(blxMouseButtonInputs button)
+{
+    if (!initialized) {
+        return BLX_FALSE;
+    }
+
+    return state.mousePrevState.buttons[button] == BLX_FALSE;
+}
+
+BLXAPI blxBool blxInputGetKeyDown(blxKeyBoardInputs key)
+{
+    if (!initialized) {
+        return BLX_FALSE;
+    }
+
+    return state.keyboardPrevState.keys[key] == BLX_FALSE && state.keyboardCurrentState.keys[key] == BLX_TRUE;
 }
 
 void blxInputGetMousePos(int* x, int* y)
@@ -119,8 +173,21 @@ void blxInputGetMousePos(int* x, int* y)
         *y = 0;
         return;
     }
+
     *x = state.mouseCurrentState.x;
     *y = state.mouseCurrentState.y;
+}
+
+void blxInputGetPrevMousePos(int* x, int* y)
+{
+    if (!initialized) {
+        *x = 0;
+        *y = 0;
+        return;
+    }
+
+    *x = state.mousePrevState.x;
+    *y = state.mousePrevState.y;
 }
 
 

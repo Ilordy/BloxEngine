@@ -2,7 +2,7 @@
 
 typedef enum {
     BLX_LMB,
-    BUTTON_RMB,
+    BLX_RMB,
     BLX_MMB,
     _BLX_BUTTON_MAX_BUTTONS
 }blxMouseButtonInputs;
@@ -141,11 +141,22 @@ typedef enum {
 } blxKeyBoardInputs;
 
 
-BLXAPI blxBool blxInputIsKeyDown(blxKeyBoardInputs key);
-BLXAPI blxBool blxInputIsKeyUp(blxKeyBoardInputs key);
-BLXAPI blxBool blxIsMouseButtonDown(blxMouseButtonInputs button);
-BLXAPI blxBool blxIsMouseButtonUp(blxMouseButtonInputs button);
+BLXAPI blxBool blxInputGetKey(blxKeyBoardInputs key);
+BLXAPI blxBool blxInputGetKeyDown(blxKeyBoardInputs button);
+BLXAPI blxBool blxInputGetKeyUp(blxKeyBoardInputs key);
+
+BLXAPI blxBool blxInputWasKeyDown(blxKeyBoardInputs key);
+BLXAPI blxBool blxInputWasKeyUp(blxKeyBoardInputs key);
+
+BLXAPI blxBool blxInputGetMouseButton(blxMouseButtonInputs button);
+BLXAPI blxBool blxGetMouseButtonDown(blxMouseButtonInputs button);
+BLXAPI blxBool blxGetMouseButtonUp(blxMouseButtonInputs button);
+BLXAPI blxBool blxWasMouseButtonDown(blxMouseButtonInputs button);
+BLXAPI blxBool blxWasMouseButtonUp(blxMouseButtonInputs button);
+
 BLXAPI void blxInputGetMousePos(int* x, int* y);
+BLXAPI void blxInputGetPrevMousePos(int* x, int* y);
+
 
 void _blxInitInputSystem();
 void _blxShutDownInputSystem();
