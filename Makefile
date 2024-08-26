@@ -15,7 +15,7 @@ DIRECTORIES := \$(DIR) $(subst $(DIR),,$(shell dir $(DIR) /S/ AD/ B | findstr /i
 CFLAGS := -Wall -fdeclspec -Wno-inconsistent-dllimport
 DEFINES := -DGLEW_STATIC -D_CRT_SECURE_NO_WARNINGS -DBLXEXPORT 
 INCLUDE_FLAGS := -IDependencies\CGLM\include -IDependencies\GLEW\include -IDependencies\GLFW\include -Isrc\vendor\stb_image -Isrc
-LINKER_FLAGS := -shared -lDependencies\GLEW\lib\Release\x64\glew32s -lDependencies\GLFW\lib-vc2022\glfw3_mt -lopengl32 -luser32 -lGdi32 -lkernel32 -llibcmt -lShell32
+LINKER_FLAGS := -shared -lDependencies\GLEW\lib\Release\x64\glew32s -lDependencies\GLFW\lib-vc2022\glfw3_mt -lopengl32 -luser32 -lGdi32 -lkernel32 -llibcmt -lShell32 -lComdlg32
 
 all: configure scaffold compile link
 

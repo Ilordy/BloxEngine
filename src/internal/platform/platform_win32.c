@@ -1,35 +1,90 @@
 #include "platform.h"
 
-//TEMP FOR NOW.
-#define BLXWIN32
-
-//#ifdef BLXWIN32
+#ifdef BLXWIN32
 #include "blx_input.h"
-
 #include <Windows.h>
 #include <windowsx.h>
 #include <time.h>
+#include <GL/glew.h>
+#include <GL/wglew.h>
+#include <GL/GL.h>
 
 typedef struct
 {
     HINSTANCE hInstance;
     HWND hwnd;
+    HDC hdc;
 } internalState;
 
+static internalState* state;
 static double clockFrequency;
 static LARGE_INTEGER startTime;
 
 LRESULT CALLBACK WindowMsgProcess(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-void CreateRenderingContext(GraphicsAPI graphicsAPI)
+static blxBool CreateRenderingContext(GraphicsAPI graphicsAPI, HWND hWnd)
 {
+    switch (graphicsAPI)
+    {
+        case OPENGL:
+            //Setting GL version to 4.3 using core profile.
+            GLint attribs[] = { WGL_CONTEXT_MAJOR_VERSION_ARB, 4,  WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+             WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB, 0 };
+            PIXELFORMATDESCRIPTOR pfd =
+            {
+                sizeof(PIXELFORMATDESCRIPTOR),
+                1,
+                PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER, // Flags
+                PFD_TYPE_RGBA,                                              // The kind of framebuffer. RGBA or palette.
+                32,                                                         // Colordepth of the framebuffer.
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                24, // Number of bits for the depthbuffer
+                8,  // Number of bits for the stencilbuffer
+                0,  // Number of Aux buffers in the framebuffer.
+                PFD_MAIN_PLANE,
+                0,
+                0,
+                0,
+                0 };
+            HDC dc = GetDC(hWnd);
+            state->hdc = dc;
+            int pf = ChoosePixelFormat(dc, &pfd);
+            SetPixelFormat(dc, pf, &pfd);
+            HGLRC rc = wglCreateContext(dc);
+            wglMakeCurrent(dc, rc);
 
+            if (glewInit() != GLEW_OK) {
+                MessageBoxA(0, "Failed to initialize OpenGL!", "Error", MB_ICONEXCLAMATION | MB_OK);
+                return BLX_FALSE;
+            }
+            
+            PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB =
+                (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
+            HGLRC context = wglCreateContextAttribsARB(dc, NULL, attribs);
+            wglMakeCurrent(dc, context);
+            wglDeleteContext(rc);
+            break;
+    }
+
+    return BLX_TRUE;
 }
 
 blxBool PlatformInit(platformState* platform, const char* appName, unsigned short width, unsigned short height, GraphicsAPI graphicsAPI)
 {
     platform->internalState = malloc(sizeof(internalState));
-    internalState* state = (internalState*)platform->internalState;
+    state = (internalState*)platform->internalState;
 
     state->hInstance = GetModuleHandleA(0);
     //Default icon, TODO: Support custom icons.
@@ -71,6 +126,11 @@ blxBool PlatformInit(platformState* platform, const char* appName, unsigned shor
 
     //Something about window not showing cmd if window should not accept input??
     ShowWindow(hWnd, SW_SHOW);
+
+    if (!CreateRenderingContext(graphicsAPI, hWnd)) {
+        return BLX_FALSE;
+    }
+
     LARGE_INTEGER frequency;
     QueryPerformanceFrequency(&frequency);
     clockFrequency = 1.0 / (double)frequency.QuadPart;
@@ -83,6 +143,8 @@ void PlatformShutDown(platformState* platform)
     internalState* state = (internalState*)platform->internalState;
 
     if (state->hwnd) {
+        //TODO: Not sure if release DC is opengl specific must be researched.
+        ReleaseDC(state->hwnd, state->hdc);
         DestroyWindow(state->hwnd);
         state->hwnd = 0;
     }
@@ -140,9 +202,8 @@ LRESULT CALLBACK WindowMsgProcess(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             // To prevent flickering.
             return 1;
         case WM_CLOSE:
-            //blxWin32Window* win = (blxWin32Window*)GetProp(hWnd, "BLXWindow");
-            //win->shouldClose = BLX_TRUE;
-            //DestroyWindow(hWnd);
+            DestroyWindow(hWnd);
+            // TODO: EVENT FOR POST QUITNG!
             //For event system.
             return 0;
         case WM_DESTROY:
@@ -156,7 +217,6 @@ LRESULT CALLBACK WindowMsgProcess(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             //Resize event.
         }break;
         case WM_CREATE:
-            printf("Window requested to be created");
             break;
 
         case WM_KEYDOWN: //Regular key
@@ -237,4 +297,43 @@ void* PlatformMemCpy(void* dest, const void* src, unsigned long long size)
     return memcpy(dest, src, size);
 }
 
-//#endif
+void PlatformSleep(uint64 ms)
+{
+    Sleep(ms);
+}
+
+blxBool PlatformOpenFilePanel(const char* title, const char* defDirectory, const char* extension, char* buffer)
+{
+    OPENFILENAME ofn; // Common dialog box structure
+    char strFilter[100];
+    snprintf(strFilter, sizeof(strFilter), "(*%s)%c*%s%c%c", extension, '\0', extension, '\0');
+
+    // Initialize OPENFILENAME
+    PlatformMemSetZero(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = state->hwnd;
+    ofn.lpstrFile = buffer;
+    ofn.lpstrFile[0] = '\0';
+    ofn.nMaxFile = MAX_PATH;
+    ofn.lpstrFilter = strFilter;
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFileTitle = NULL;
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = defDirectory;
+    ofn.lpstrTitle = title;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+    if (GetOpenFileName(&ofn)) {
+        return BLX_TRUE;
+    }
+
+    return BLX_FALSE;
+}
+
+void PlatformSwapBuffers()
+{
+    //TODO: Figure out if this is opengl specific.
+    SwapBuffers(state->hdc);
+}
+
+#endif

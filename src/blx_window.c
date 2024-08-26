@@ -5,6 +5,8 @@
 #include <GL/wglew.h>
 #include <GL/GL.h>
 
+//TODO: Deprecated stuff, pls remove.
+
 typedef struct {
     //TODO: Clean up this struct with correct names.
     HWND hWnd;

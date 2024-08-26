@@ -4,15 +4,18 @@
 #include "internal/platform/platform.h"
 #include "blx_memory.h"
 #include "blx_input.h"
+#include "blx_clock.h"
 
 typedef struct {
     blxBool isRunning;
     blxBool isSuspended;
-    platformState* platform;
+    platformState platform;
     short width, height;
     double lastTime;
-    GraphicsAPI currentGraphicAPI;
+    blxClock clock;
     blxGameInstance* gameInstance;
+    //these 2 to renderer.
+    GraphicsAPI currentGraphicAPI;
 }appState;
 
 static blxBool initialized = BLX_FALSE;
@@ -37,8 +40,11 @@ blxBool blxCreateApplication(blxGameInstance* gameInstance)
     if (!PlatformInit(&app.platform,
         gameInstance->config.name, gameInstance->config.width,
         gameInstance->config.height, gameInstance->config.graphicAPI)) {
+        BLXERROR("Platform failed to initialize!");
         return BLX_FALSE;
     }
+
+    blxInitRenderer(app.currentGraphicAPI);
 
     if (!app.gameInstance->Init(app.gameInstance)) {
         BLXERROR("Game failed to initialize!");
@@ -54,6 +60,13 @@ blxBool blxCreateApplication(blxGameInstance* gameInstance)
 
 blxBool blxRunApplication()
 {
+    blxStartClock(&app.clock);
+    blxUpdateClock(&app.clock);
+    app.lastTime = app.clock.elaspedTime;
+    double runningTime = 0;
+    unsigned char frameCount = 0;
+    double targetFrameSeconds = 1.0f / 60; //60 is desired frame rate. (60 fps)
+
     //Game Loop
     while (app.isRunning)
     {
@@ -62,15 +75,50 @@ blxBool blxRunApplication()
         }
 
         if (!app.isSuspended) {
-            if (!app.gameInstance->Update(app.gameInstance, 0)) {
-                BLXERROR("Game Update failed.");
+            blxUpdateClock(&app.clock);
+            double currentTime = app.clock.elaspedTime;
+            double delta = currentTime - app.lastTime;
+            double frameStartTime = PlatformGetTime();
+
+            if (!app.gameInstance->Update(delta)) {
+                BLXERROR("Game Update failed!");
                 app.isRunning = BLX_FALSE;
                 break;
             }
+
+            if (!app.gameInstance->Render()) {
+                BLXERROR("Game Render failed!");
+                app.isRunning = BLX_FALSE;
+                break;
+            }
+
+            blxDraw();
+            PlatformSwapBuffers();
+
+            double frameEndTime = PlatformGetTime();
+            double frameElapsedTime = frameEndTime - frameStartTime;
+            runningTime += frameElapsedTime;
+            double remainingSeconds = targetFrameSeconds - frameElapsedTime;
+
+            if (remainingSeconds > 0) {
+                uint64 remainingMs = remainingSeconds * 1000;
+
+                // TODO: Add functionality for limiting frames and setting a desired frame rate.
+                blxBool limitFrames = BLX_FALSE;
+                if (remainingMs > 0 && limitFrames)
+                {
+                    PlatformSleep(remainingMs - 1);
+                }
+
+
+                frameCount++;
+            }
+
+
+            _blxUpdateInput(delta);
+            app.lastTime = currentTime;
         }
 
-        //todo: delta time
-        _blxUpdateInput(0);
     }
     app.isRunning = BLX_FALSE;
     PlatformShutDown(&app.platform);

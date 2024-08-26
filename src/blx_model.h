@@ -1,5 +1,5 @@
 #pragma once
-#include "blx_rendering.h"
+#include "blx_mesh.h"
 #include "Transform.h"
 #include "Shader.h"
 

@@ -1,6 +1,7 @@
 #include "opengl.h"
 #include "GL/glew.h"
 #include "blx_rendering.h"
+#include "blx_logger.h"
 //TODO: Add support for index buffers
 
 
@@ -12,28 +13,43 @@ typedef struct
 
 void OpenGLInit()
 {
-    if (glewInit() != GLEW_OK) {
-        printf("GLEW Failed to initialize\n");
-        //return -1; cant return values, maybe try exit();
-    }
-
+    glEnable(GL_DEPTH_TEST);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    GLint versionMajor;
+    glGetIntegerv(GL_MAJOR_VERSION, &versionMajor);
+    GLint versionMinor;
+    glGetIntegerv(GL_MINOR_VERSION, &versionMinor);
+    BLXINFO("OpenGL Initialized using GL Version: %d.%d", versionMajor, versionMinor);
 }
 
-void OpenGLDraw(blxMesh* mesh)
+void OpenGLDraw(blxRenderPacket* packet)
 {
-    glMeshData* md = (glMeshData*)mesh->_meshData;
-    glUseProgram(mesh->shader);
-    glBindVertexArray(md->VAO);
-    glDrawElements(GL_TRIANGLES, blxGetListCount(mesh->indices), GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
-}
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-void GlMeshTest(blxMesh* mesh) {
-    printf("%d\n", ((glMeshData*)mesh->_meshData)->VAO);
-    printf("%d\n", mesh->shader);
+    for (unsigned int i = 0; i < packet->modelCount; i++)
+    {
+        blxMesh mesh = packet->models[i].mesh;
+        glMeshData* md = (glMeshData*)mesh._meshData;
+        glUseProgram(mesh.shader);
+        glBindVertexArray(md->VAO);
+        shader_setMatrix4f(mesh.shader, "projection", packet->cam->projecionMatrix);
+        mat4 modelMatrix;
+        _transform_modelMatrix(&packet->models[i].transform, modelMatrix);
+        shader_setMatrix4f(mesh.shader, "model", modelMatrix);
+        shader_setMatrix4f(mesh.shader, "view", packet->cam->viewMatrix);
+        glDrawElements(GL_TRIANGLES, blxGetListCount(mesh.indices), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+    }
 }
 
 void OpenGLInitMesh(blxMesh* mesh) {
+    // if (mesh->_meshData != NULL) {
+    //     // TODO: refactor this.
+    //     printf("MESH DATA ALREADY INITIALIZED!\n");
+    //     return; //MeshData already initialized.
+    // }
+
     glMeshData* md = (glMeshData*)malloc(sizeof(glMeshData));
     glGenVertexArrays(1, &md->VAO);
     glBindVertexArray(md->VAO);
@@ -51,7 +67,6 @@ void OpenGLInitMesh(blxMesh* mesh) {
     glEnableVertexAttribArray(2);
     glBindVertexArray(0);
     mesh->_meshData = (void*)md;
-    //GlMeshTest(mesh);
 }
 
 void OpenGLUpdateMesh(blxMesh* mesh)
@@ -66,7 +81,7 @@ void OpenGLUpdateMesh(blxMesh* mesh)
     {
         printf("%u\n", mesh->indices[i]);
     }
-    
+
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, blxGetListCount(mesh->indices) * sizeof(unsigned int), mesh->indices, GL_STATIC_DRAW);
     glBindVertexArray(0);
 }

@@ -7,6 +7,7 @@ typedef struct blxGameInstance {
     /// @brief Initialize function for game
     blxBool(*Init)(struct blxGameInstance* game);
     /// Called once per frame
-    blxBool(*Update)(struct blxGameInstance* game, float deltaTime);
-    void* state;
+    blxBool(*Update)(float deltaTime);
+     /// @brief Rendering goes here.
+    blxBool(*Render)();
 }blxGameInstance;

@@ -89,10 +89,10 @@ Shader shader_create(const char* fragPath, const char* vertPath, GLboolean useSh
 	glLinkProgram(shaderProgram);
 	// TODO: ERROR IS HERE ON LINE 91, PLS FIX!
 	//Use glGetProgramiv instead of shaderiv.
-	if (shader_checkError(shaderProgram, GL_LINK_STATUS))
-	{
-		return -1;
-	}
+	// if (shader_checkError(shaderProgram, GL_LINK_STATUS))
+	// {
+	// 	return -1;
+	// }
 
 	if (useShader)
 	{

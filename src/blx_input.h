@@ -157,7 +157,6 @@ BLXAPI blxBool blxWasMouseButtonUp(blxMouseButtonInputs button);
 BLXAPI void blxInputGetMousePos(int* x, int* y);
 BLXAPI void blxInputGetPrevMousePos(int* x, int* y);
 
-
 void _blxInitInputSystem();
 void _blxShutDownInputSystem();
 void _blxUpdateInput(double deltaTime);

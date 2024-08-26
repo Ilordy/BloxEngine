@@ -14,7 +14,7 @@ int main(void)
         return -1;
     }
 
-    if (!gameInstance.Init || !gameInstance.Update) {
+    if (!gameInstance.Init || !gameInstance.Update || !gameInstance.Render) {
         BLXERROR("A function pointer has not been assinged yet.");
         return -2;
     }
@@ -28,7 +28,7 @@ int main(void)
         BLXINFO("Application did not shut down correctly.");
         return 2;
     }
-    
+
     _blxShutDownMemory();
     return 0;
 }

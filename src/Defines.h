@@ -30,6 +30,7 @@ typedef unsigned long long uint64;
 
 #ifdef _MSC_VER
 #define WIN32
+#define BLXWIN32
 #endif
 #ifdef _GNUC
 #define LINUX

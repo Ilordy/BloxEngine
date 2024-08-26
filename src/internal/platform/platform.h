@@ -18,6 +18,9 @@ void* PlatformAllocate(unsigned long long size);
 void* PlatformMemSetZero(void* block, unsigned long long size);
 void PlatformFreeMemory(void* block);
 void* PlatformMemCpy(void* dest, const void* src, unsigned long long size);
+void PlatformSleep(uint64 ms);
+blxBool PlatformOpenFilePanel(const char* title, const char* defDirectory, const char* extension, char* buffer);
+void PlatformSwapBuffers();
 
 
 
