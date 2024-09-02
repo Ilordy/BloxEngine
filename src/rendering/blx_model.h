@@ -1,7 +1,7 @@
 #pragma once
-#include "blx_mesh.h"
-#include "Transform.h"
-#include "Shader.h"
+#include "rendering/blx_mesh.h"
+#include "core/blx_transform.h"
+#include "rendering/blx_shader.h"
 
 typedef struct {
     Transform transform;

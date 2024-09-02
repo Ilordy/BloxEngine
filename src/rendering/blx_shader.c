@@ -1,4 +1,4 @@
-#include "Shader.h"
+#include "rendering/blx_shader.h"
 #include <stdio.h>
 #include <sys/stat.h>
 #include <stdlib.h>

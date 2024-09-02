@@ -8,7 +8,8 @@
 #include "cglm/struct/vec3.h"
 #include "cglm/struct/vec2.h"
 #include "utils/blx_hashTable.h"
-#include "blx_logger.h"
+#include "core/blx_logger.h"
+#include "core/blx_memory.h"
 
 typedef struct
 {
@@ -16,10 +17,13 @@ typedef struct
     void (*Draw)(blxRenderPacket* packet);
     void (*UpdateMesh)(blxMesh*);
     void (*InitMesh)(blxMesh*);
+    void (*SetShadingMode) (blxShadingMode mode);
     blxRenderPacket packet;
 } blxRenderer;
 
 blxRenderer* renderer;
+static blxBool initialized = BLX_FALSE;
+static blxMesh defaultUIGeometry;
 
 // TODO: Move this to logger! ----
 void GLDebug(GLenum source, GLenum type, GLuint id,
@@ -34,14 +38,15 @@ void GLDebug(GLenum source, GLenum type, GLuint id,
 // -------
 
 
-
 void blxInitRenderer(GraphicsAPI graphicsToUse)
 {
-    if (!renderer) {
+    if (!initialized) {
         //Instead of malloc might be better to just have a static state.
         renderer = (blxRenderer*)malloc(sizeof(blxRenderer));
-        //Temp use platform instead.
-        memset(renderer, 0, sizeof(blxRenderer));
+        blxZeroMemory(&renderer->packet, sizeof(blxRenderPacket));
+        //TODO: TEMP FOR NOW TILL WE GET A MATERIAL SYSTEM.
+        renderer->packet.directionalLight.diffuse = (vec3s){ 1.0f, 1.0f, 1.0f };
+        initialized = BLX_TRUE;
     }
 
     switch (graphicsToUse)
@@ -51,6 +56,7 @@ void blxInitRenderer(GraphicsAPI graphicsToUse)
             renderer->Init = OpenGLInit;
             renderer->InitMesh = OpenGLInitMesh;
             renderer->UpdateMesh = OpenGLUpdateMesh;
+            renderer->SetShadingMode = OpenGLSetShadingMode;
             glEnable(GL_DEBUG_OUTPUT);
             glDebugMessageCallback(GLDebug, 0);
             BLXINFO("Initializing Renderer with OpenGL...");
@@ -58,6 +64,52 @@ void blxInitRenderer(GraphicsAPI graphicsToUse)
     }
 
     renderer->Init();
+    renderer->InitMesh(&defaultUIGeometry);
+    //TODO: Make these vertices and indices part of a built in obj file.
+    defaultUIGeometry.vertices = blxInitListWithSize(vList_blxVertex, 4);
+    defaultUIGeometry.indices = blxInitListWithSize(vList_indices, 6);
+
+    blxAddValueToList(defaultUIGeometry.vertices, ((blxVertex)
+        //position
+    {   0.5f, 0.5f, 0.0f,
+        //normal
+        0.0f, 0.0f, 0.0f,
+        //uv
+        1.0f, 1.0f
+    }));
+    blxAddValueToList(defaultUIGeometry.vertices, ((blxVertex)
+        //position
+    {   0.5f, -0.5f, 0.0f,
+        //normal
+        0.0f, 0.0f, 0.0f,
+        //uv
+        1.0f, 0.0f
+    }));
+    blxAddValueToList(defaultUIGeometry.vertices, ((blxVertex)
+        //position
+    {   -0.5f, -0.5f, 0.0f,
+        //normal
+        0.0f, 0.0f, 0.0f,
+        //uv
+        0.0f, 0.0f
+    }));
+    blxAddValueToList(defaultUIGeometry.vertices, ((blxVertex)
+        //position
+    {   -0.5f, 0.5f, 0.0f,
+        //normal
+        0.0f, 0.0f, 0.0f,
+        //uv
+        0.0f, 1.0f
+    }));
+
+    blxAddValueToList(defaultUIGeometry.indices, 0);
+    blxAddValueToList(defaultUIGeometry.indices, 1);
+    blxAddValueToList(defaultUIGeometry.indices, 3);
+    blxAddValueToList(defaultUIGeometry.indices, 1);
+    blxAddValueToList(defaultUIGeometry.indices, 2);
+    blxAddValueToList(defaultUIGeometry.indices, 3);
+    //End TODO
+    renderer->UpdateMesh(&defaultUIGeometry);
 }
 
 
@@ -72,9 +124,20 @@ void blxDrawModel(blxModel* model)
     renderer->packet.modelCount += 1;
 }
 
+void blxDrawUI(blxModel* model)
+{
+    renderer->packet.ui[renderer->packet.uiCount] = *model;
+    renderer->packet.uiCount += 1;
+}
+
 void blxInitMesh(blxMesh* mesh)
 {
     renderer->InitMesh(mesh);
+}
+
+void blxSetShadingMode(blxShadingMode mode)
+{
+    renderer->SetShadingMode(mode);
 }
 
 void blxDraw()
@@ -82,6 +145,7 @@ void blxDraw()
     camera_update(renderer->packet.cam);
     renderer->Draw(&renderer->packet);
     renderer->packet.modelCount = 0;
+    renderer->packet.uiCount = 0;
 }
 
 void blxUpdateMesh(blxMesh* mesh)

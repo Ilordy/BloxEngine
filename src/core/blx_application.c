@@ -4,7 +4,7 @@
 #include "internal/platform/platform.h"
 #include "blx_memory.h"
 #include "blx_input.h"
-#include "blx_clock.h"
+#include "utils/blx_clock.h"
 
 typedef struct {
     blxBool isRunning;

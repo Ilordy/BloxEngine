@@ -1,4 +1,4 @@
-#include "Defines.h"
+#include "core/blx_defines.h"
 
 typedef enum {
     BLX_LMB,
@@ -42,6 +42,10 @@ typedef enum {
     _DEFINE_KEY(INSERT, 0x2D),
     _DEFINE_KEY(DELETE, 0x2E),
     _DEFINE_KEY(HELP, 0x2F),
+
+    _DEFINE_KEY(0, 0x30),
+    _DEFINE_KEY(1, 0x31),
+    _DEFINE_KEY(2, 0x32),
 
     _DEFINE_KEY(A, 0x41),
     _DEFINE_KEY(B, 0x42),

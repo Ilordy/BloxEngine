@@ -1,5 +1,5 @@
 #pragma once
-#include "../Defines.h"
+#include "core/blx_defines.h"
 #include "blx_linkedList.h"
 #include <vcruntime_string.h>
 

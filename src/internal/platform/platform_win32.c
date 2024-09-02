@@ -1,7 +1,7 @@
 #include "platform.h"
 
 #ifdef BLXWIN32
-#include "blx_input.h"
+#include "core/blx_input.h"
 #include <Windows.h>
 #include <windowsx.h>
 #include <time.h>
@@ -83,6 +83,7 @@ static blxBool CreateRenderingContext(GraphicsAPI graphicsAPI, HWND hWnd)
 
 blxBool PlatformInit(platformState* platform, const char* appName, unsigned short width, unsigned short height, GraphicsAPI graphicsAPI)
 {
+    //TODO: Verify we still need this internal state..
     platform->internalState = malloc(sizeof(internalState));
     state = (internalState*)platform->internalState;
 

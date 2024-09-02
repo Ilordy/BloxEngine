@@ -1,7 +1,7 @@
 #include "opengl.h"
 #include "GL/glew.h"
-#include "blx_rendering.h"
-#include "blx_logger.h"
+#include "rendering/blx_rendering.h"
+#include "core/blx_logger.h"
 //TODO: Add support for index buffers
 
 
@@ -14,7 +14,6 @@ typedef struct
 void OpenGLInit()
 {
     glEnable(GL_DEPTH_TEST);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     GLint versionMajor;
     glGetIntegerv(GL_MAJOR_VERSION, &versionMajor);
     GLint versionMinor;
@@ -24,7 +23,7 @@ void OpenGLInit()
 
 void OpenGLDraw(blxRenderPacket* packet)
 {
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(0.322f, 0.322f, 0.332f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for (unsigned int i = 0; i < packet->modelCount; i++)
@@ -34,10 +33,30 @@ void OpenGLDraw(blxRenderPacket* packet)
         glUseProgram(mesh.shader);
         glBindVertexArray(md->VAO);
         shader_setMatrix4f(mesh.shader, "projection", packet->cam->projecionMatrix);
+        //for specular lighting, possibly temp for now.
+        shader_setVec3(mesh.shader, "camPos", packet->cam->transform.position);
         mat4 modelMatrix;
         _transform_modelMatrix(&packet->models[i].transform, modelMatrix);
         shader_setMatrix4f(mesh.shader, "model", modelMatrix);
         shader_setMatrix4f(mesh.shader, "view", packet->cam->viewMatrix);
+        glDrawElements(GL_TRIANGLES, blxGetListCount(mesh.indices), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+    }
+
+    for (unsigned int i = 0; i < packet->uiCount; i++)
+    {
+        blxMesh mesh = packet->ui[i].mesh;
+        int g = blxGetListCount(mesh.vertices);
+        glMeshData* md = (glMeshData*)mesh._meshData;
+        glUseProgram(mesh.shader);
+        glBindVertexArray(md->VAO);
+        mat4 proj;
+        _blxGetCameraProjection(&packet->cam, ORTHOGRAPHIC, proj);
+        shader_setMatrix4f(mesh.shader, "projection", proj);
+        mat4 modelMatrix;
+        _transform_modelMatrix(&packet->ui[i].transform, modelMatrix);
+        shader_setMatrix4f(mesh.shader, "model", modelMatrix);
+        shader_setMatrix4f(mesh.shader, "view", GLM_MAT4_IDENTITY);
         glDrawElements(GL_TRIANGLES, blxGetListCount(mesh.indices), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }
@@ -84,6 +103,19 @@ void OpenGLUpdateMesh(blxMesh* mesh)
 
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, blxGetListCount(mesh->indices) * sizeof(unsigned int), mesh->indices, GL_STATIC_DRAW);
     glBindVertexArray(0);
+}
+
+void OpenGLSetShadingMode(blxShadingMode mode)
+{
+    switch (mode)
+    {
+        case BLX_SHADING_SOLID:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            break;
+        case BLX_SHADING_WIREFRAME:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            break;
+    }
 }
 
 

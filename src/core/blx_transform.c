@@ -1,5 +1,5 @@
-#include "Transform.h"
-#include "Defines.h"
+#include "core/blx_transform.h"
+#include "core/blx_defines.h"
 
 void transform_init(Transform* trans) {
   glm_vec3(GLM_VEC3_ZERO, trans->position);

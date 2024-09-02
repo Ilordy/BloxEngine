@@ -1,5 +1,5 @@
 #pragma once
-#include "Defines.h"
+#include "core/blx_defines.h"
 #include "GL/glew.h"
 
 // Might want to have an active slot that texture uses and can be switched.

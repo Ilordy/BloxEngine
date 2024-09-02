@@ -1,5 +1,5 @@
 #pragma once
-#include "Defines.h"
+#include "core/blx_defines.h"
 
 //TODO: Deprecated stuff, pls remove.
 

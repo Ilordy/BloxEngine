@@ -1,5 +1,5 @@
 #pragma once
-#include "Transform.h"
+#include "core/blx_transform.h"
 #include <cglm/cam.h>
 #include <cglm/cglm.h>
 
@@ -11,6 +11,8 @@ typedef struct {
   CameraProjectionType projectionType;
   mat4 projecionMatrix, viewMatrix;
 } Camera;
+
+void _blxGetCameraProjection(Camera* cam, CameraProjectionType projType, mat4 dest);
 
 BLXAPI void camera_init(Camera* cam, float fov);
 BLXAPI void camera_setProjection(Camera* cam, CameraProjectionType projType);

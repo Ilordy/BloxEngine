@@ -1,5 +1,5 @@
-#include "blx_rendering.h"
-#include "blx_primitives.h"
+#include "rendering/blx_rendering.h"
+#include "utils/blx_primitives.h"
 
 blxMesh* blxCubeMesh() {
     blxMesh* mesh = (blxMesh*)malloc(sizeof(blxMesh));

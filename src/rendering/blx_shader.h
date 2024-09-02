@@ -1,7 +1,7 @@
 #pragma once
-#include "Defines.h"
+#include "core/blx_defines.h"
 #include "GL/glew.h"
-#include "Texture.h"
+#include "rendering/blx_texture.h"
 #include "cglm/cglm.h"
 
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "Defines.h"
+#include "core/blx_defines.h"
 
 #define BLX_INFO_LOG_ENALBED 1
 #define BLX_WARNING_LOG_ENALBED 1

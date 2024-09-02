@@ -1,4 +1,4 @@
-#include "Texture.h"
+#include "rendering/blx_texture.h"
 #include "vendor/stb_image/stb_image.h"
 
 

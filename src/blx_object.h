@@ -1,6 +1,6 @@
 #pragma once
-#include "Defines.h"
-#include "Transform.h"
+#include "core/blx_defines.h"
+#include "core/blx_transform.h"
 
 typedef struct{
     Transform transform;

@@ -1,6 +1,6 @@
 #pragma once
-#include "Defines.h"
-#include "blx_rendering.h"
+#include "core/blx_defines.h"
+#include "rendering/blx_rendering.h"
 
 struct blxGameInstance;
 

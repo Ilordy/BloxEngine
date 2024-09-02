@@ -1,5 +1,5 @@
 #pragma once
-#include "../Defines.h"
+#include "core/blx_defines.h"
 
 //THIS HEADER FILE IS SUBJECT TO BEING NAME CHANGED WHEN I FIND MORE USEFUL STUFF TO DO HERE.
 

@@ -1,7 +1,7 @@
 #pragma once
 #include <vcruntime_string.h>
 
-#include "../Defines.h"
+#include "core/blx_defines.h"
 
 /// @brief Initalizes a linked node. Useful for creating a linked node from a literal.
 /// @param linkedNodePtr This should be a blxLinkedNode pointer.

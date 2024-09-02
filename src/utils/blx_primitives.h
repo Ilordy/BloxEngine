@@ -1,5 +1,5 @@
 #pragma once
-#include "../Defines.h"
-#include "../blx_model.h"
+#include "core/blx_defines.h"
+#include "rendering/blx_mesh.h"
 
 BLXAPI blxMesh* blxCubeMesh();
