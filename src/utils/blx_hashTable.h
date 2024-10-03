@@ -1,12 +1,15 @@
 #pragma once
 #include "core/blx_defines.h"
 #include "blx_linkedList.h"
+#include "core/blx_logger.h"
+
 #include <vcruntime_string.h>
 
-#define BLX_DEFAULT_HASH_TABLE_SIZE 11
+#define BLX_DEFAULT_HASH_TABLE_SIZE 97
 
 // TODO: Add support for assertsions.
 // TODO: Add support for memory arenas.
+// TODO: Refactor
 
 /// @brief Creates a new hash table with the default size.
 /// @param keyType The type the hash table keys will be.
@@ -23,11 +26,11 @@
 /// @returns A newly created hash table with given size.
 #define blxCreateHashTableWithSize(keyType, valueType, tableSize, compareFunction) _blxCreateHashTable(sizeof(keyType), sizeof(valueType), tableSize, compareFunction)
 
-/// @brief Adds a given key value pair to given hash table.
+/// @brief Allocates memory to Add a given key value pair to given hash table.
 /// @param table The table to add our key value pair to.
 /// @param key The key to add (Can be a literal).
 ///@param value The value to add (Can be a literal).
-#define blxAddToHashTable(table, keyToAdd, valueToAdd)\
+#define blxAddToHashTableAlloc(table, keyToAdd, valueToAdd)\
 {\
     typeof(keyToAdd) keyTarget = keyToAdd;\
     blxLinkedNode* target = _blxLinkedNodeFromHashKey(table, &keyTarget);\
@@ -42,7 +45,7 @@
         }\
         else\
         {\
-            printf("Hash Table Key already exist!\n");\
+            BLXWARNING("Hash Table Key already exist!\n");\
         }\
     }\
     else\
@@ -51,7 +54,7 @@
         *keyPtr = keyToAdd;\
         typeof(valueToAdd)* valuePtr = (typeof(valueToAdd)*)malloc(sizeof(valueToAdd));\
         *valuePtr = valueToAdd;\
-        _blxAddToHashTable(table, keyPtr, valuePtr);\
+        blxAddToHashTable(table, keyPtr, valuePtr);\
     }\
 }\
 
@@ -117,6 +120,40 @@ static blxBool blxHashTableKeyExist(blxHashTable* table, void* key, void* outVal
     return BLX_FALSE;
 }
 
+/// @brief Adds a key value pair to the hash table. User is responsible for stack allocated memory.
+/// @param table The table to add the kvp to.
+/// @param key key to add.
+/// @param value value to add.
+static void blxAddToHashTable(blxHashTable* table, void* key, void* value)
+{
+    if (blxHashTableKeyExist(table, key, NULL)) {
+        BLXWARNING("Hash table key already exist!");
+        return;
+    }
+
+    size_t index = _blxToHash(key, table->_keySize) % table->tableArraySize;
+    blxLinkedNode* head = table->_buckets[index];
+    blxLinkedNode* currentNode = head;
+    while (currentNode)
+    {
+        blxHashTableEntry* entry = (blxHashTableEntry*)currentNode->value;
+        if (entry) {
+            if (!entry->inUse)
+            {
+                entry->key = key;
+                entry->value = key;
+                entry->inUse = BLX_TRUE;
+                return;
+            }
+        }
+
+        currentNode = currentNode->next;
+    }
+
+    // If all linked nodes are in use then create a new one and append it to the end.
+    blxAppendLinkedNodeLiteral(head, ((blxHashTableEntry) {key, value, BLX_TRUE}));
+}
+
 /// @brief Frees all allocated memory from given table.
 static void blxFreeHashTable(blxHashTable* table)
 {
@@ -180,36 +217,11 @@ static blxLinkedNode* _blxLinkedNodeFromHashKey(blxHashTable* table, void* key)
     return NULL;
 }
 
-static void _blxAddToHashTable(blxHashTable* table, void* key, void* value)
-{
-    size_t index = _blxToHash(key, table->_keySize) % table->tableArraySize;
-    blxLinkedNode* head = table->_buckets[index];
-    blxLinkedNode* currentNode = head;
-    while (currentNode)
-    {
-        blxHashTableEntry* entry = (blxHashTableEntry*)currentNode->value;
-        if (entry) {
-            if (!entry->inUse)
-            {
-                entry->key = key;
-                entry->value = key;
-                entry->inUse = BLX_TRUE;
-                return;
-            }
-        }
-
-        currentNode = currentNode->next;
-    }
-
-    // If all linked nodes are in use then create a new one and append it to the end.
-    blxAppendLinkedNodeLiteral(head, ((blxHashTableEntry) {key, value, BLX_TRUE}));
-}
-
 static void _blxDeleteFromHashTable(blxHashTable* table, void* key)
 {
     blxLinkedNode* target = _blxLinkedNodeFromHashKey(table, key);
     if (!target) {
-        printf("Hash table key to delete was not found!\n");
+        BLXWARNING("Hash table key to delete was not found!\n");
         return;
     }
 
