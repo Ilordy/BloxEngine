@@ -11,20 +11,39 @@
 // TODO: Add support for memory arenas.
 // TODO: Refactor
 
-/// @brief Creates a new hash table with the default size.
+static uint64 blxToHash(void* key, uint64 size);
+
+/// @brief Creates a new hash table with the default size and hashing function (default hash does not work with arrays).
 /// @param keyType The type the hash table keys will be.
 /// @param valueType The type the hash table values will be.
 /// @param compareFunction Compare function pointer for comparing keys.
 /// @returns A newly created hash table.
-#define blxCreateHashTable(keyType, valueType, compareFunction) _blxCreateHashTable(sizeof(keyType), sizeof(valueType), BLX_DEFAULT_HASH_TABLE_SIZE, compareFunction)
+#define blxCreateHashTable(keyType, valueType, compareFunction) _blxCreateHashTable(sizeof(keyType), sizeof(valueType), BLX_DEFAULT_HASH_TABLE_SIZE, compareFunction, NULL)
+
+/// @brief Creates a new hash table with the default size.
+/// @param keyType The type the hash table keys will be.
+/// @param valueType The type the hash table values will be.
+/// @param compareFunction Compare function pointer for comparing keys.
+/// @param hashFunction Custom hashing function
+/// @returns A newly created hash table.
+#define blxCreateHashTableWithHash(keyType, valueType, compareFunction, hashFunction) _blxCreateHashTable(sizeof(keyType), sizeof(valueType), BLX_DEFAULT_HASH_TABLE_SIZE, compareFunction, hashFunction)
 
 /// @brief Creates a new hash table with given size.
 /// @param keyType The type the hash table keys will be.
 /// @param valueType The type the hash table values will be.
 /// @param tableSize The size for the hash table.
 /// @param compareFunction Compare function pointer for comparing keys.
+/// @param hashFunction Custom hashing function
 /// @returns A newly created hash table with given size.
-#define blxCreateHashTableWithSize(keyType, valueType, tableSize, compareFunction) _blxCreateHashTable(sizeof(keyType), sizeof(valueType), tableSize, compareFunction)
+#define blxCreateHashTableWithSizeAndHash(keyType, valueType, tableSize, compareFunction, hashFunction) _blxCreateHashTable(sizeof(keyType), sizeof(valueType), tableSize, compareFunction, hashFunction)
+
+/// @brief Creates a new hash table with given size and default hash function (default hash does not work with arrays).
+/// @param keyType The type the hash table keys will be.
+/// @param valueType The type the hash table values will be.
+/// @param tableSize The size for the hash table.
+/// @param compareFunction Compare function pointer for comparing keys.
+/// @returns A newly created hash table with given size.
+#define blxCreateHashTableWithSize(keyType, valueType, tableSize, compareFunction) _blxCreateHashTable(sizeof(keyType), sizeof(valueType), tableSize, compareFunction, NULL)
 
 /// @brief Allocates memory to Add a given key value pair to given hash table.
 /// @param table The table to add our key value pair to.
@@ -33,14 +52,19 @@
 #define blxAddToHashTableAlloc(table, keyToAdd, valueToAdd)\
 {\
     typeof(keyToAdd) keyTarget = keyToAdd;\
+    typeof(valueToAdd) valueTarget = valueToAdd;\
     blxLinkedNode* target = _blxLinkedNodeFromHashKey(table, &keyTarget);\
+    typeof(keyToAdd)* keyPtr = (typeof(keyToAdd)*)malloc(sizeof(keyToAdd));\
+    blxMemCpy(keyPtr, &keyTarget, sizeof(keyToAdd));\
+    typeof(valueToAdd)* valuePtr = (typeof(valueToAdd)*)malloc(sizeof(valueToAdd));\
+    blxMemCpy(valuePtr, &valueTarget, sizeof(valueToAdd));\
     if(target)\
     {\
         blxHashTableEntry* entry = (blxHashTableEntry*)target->value;\
         if(!entry->inUse)\
         {\
-            *((typeof(keyToAdd)*)entry->key) = keyToAdd;\
-            *((typeof(valueToAdd)*)entry->value) = valueToAdd;\
+            entry->key = keyPtr;\
+            entry->value = valuePtr;\
             entry->inUse = BLX_TRUE;\
         }\
         else\
@@ -50,10 +74,6 @@
     }\
     else\
     {\
-        typeof(keyToAdd)* keyPtr = (typeof(keyToAdd)*)malloc(sizeof(keyToAdd));\
-        *keyPtr = keyToAdd;\
-        typeof(valueToAdd)* valuePtr = (typeof(valueToAdd)*)malloc(sizeof(valueToAdd));\
-        *valuePtr = valueToAdd;\
         blxAddToHashTable(table, keyPtr, valuePtr);\
     }\
 }\
@@ -67,6 +87,17 @@
     _blxDeleteFromHashTable(table, &key);\
 }
 
+#define _BLXTABLE_GET_BUCKET_INDEX(table, key, indexPtr) \
+{\
+    if(table->ToHash){\
+        *indexPtr = table->ToHash(key) % table->tableArraySize;\
+    }\
+    else{\
+        *indexPtr = blxToHash(key, table->_keySize) % table->tableArraySize;\
+    }\
+}\
+
+// TODO: Add value size and key size here!
 typedef struct {
     void* key;
     void* value;
@@ -76,13 +107,16 @@ typedef struct {
 /// @brief Hash table structure for storing key value pairs.
 typedef struct {
     blxLinkedNode** _buckets;
-    size_t _keySize;
-    size_t _valueSize;
-    size_t tableArraySize;
+    /// @brief Size of key type,
+    ///does not take into account buffer sizes.
+    uint64 _keySize;
+    /// @brief Size of value type,
+    ///does not take into account buffer sizes.
+    uint64 _valueSize;
+    uint64 tableArraySize;
     blxBool(*KeyCompare) (void* a, void* b);
+    uint64(*ToHash) (void* key);
 }blxHashTable;
-
-static size_t _blxToHash(void* key, size_t size);
 
 /// @brief Checks if a certain key exists in the hash table.
 /// @param table The hash table to search the key for.
@@ -97,7 +131,9 @@ static blxBool blxHashTableKeyExist(blxHashTable* table, void* key, void* outVal
         return BLX_FALSE;
     }
 
-    size_t index = _blxToHash(key, table->_keySize) % table->tableArraySize;
+    uint64 index;
+    _BLXTABLE_GET_BUCKET_INDEX(table, key, &index);
+    BLXERROR("%i", index);
     blxLinkedNode* currentNode = table->_buckets[index];
     while (currentNode)
     {
@@ -131,7 +167,8 @@ static void blxAddToHashTable(blxHashTable* table, void* key, void* value)
         return;
     }
 
-    size_t index = _blxToHash(key, table->_keySize) % table->tableArraySize;
+    uint64 index;
+    _BLXTABLE_GET_BUCKET_INDEX(table, key, &index);
     blxLinkedNode* head = table->_buckets[index];
     blxLinkedNode* currentNode = head;
     while (currentNode)
@@ -157,7 +194,7 @@ static void blxAddToHashTable(blxHashTable* table, void* key, void* value)
 /// @brief Frees all allocated memory from given table.
 static void blxFreeHashTable(blxHashTable* table)
 {
-    for (size_t i = 0; i < table->tableArraySize; i++)
+    for (uint64 i = 0; i < table->tableArraySize; i++)
     {
         blxFreeLinkedList(table->_buckets[i], BLX_TRUE);
     }
@@ -168,37 +205,42 @@ static void blxFreeHashTable(blxHashTable* table)
 
 // djb2 hash algorithm.
 // https://theartincode.stanis.me/008-djb2/
-static size_t _blxToHash(void* key, size_t size)
+static uint64 blxToHash(void* key, uint64 size)
 {
     //Try regular char* version.
     const uint8_t* data = (const uint8_t*)key;
     uint32_t hash = 5381; // Initial hash value
 
-    for (size_t i = 0; i < size; ++i) {
+    for (uint64 i = 0; i < size; ++i) {
         hash = ((hash << 5) + hash) + data[i];
     }
 
     return hash;
 }
 
-static blxHashTable* _blxCreateHashTable(size_t keySize, size_t valueSize, size_t tableSize, blxBool(*Compare) (void* a, void* b))
+// TODO: Refactor to allow user to not have to use malloc if they do not want to!
+
+static blxHashTable* _blxCreateHashTable(uint64 keySize, uint64 valueSize, uint64 tableSize,
+    blxBool(*Compare) (void* a, void* b), uint64(*ToHash)(void* key))
 {
     blxHashTable* ht = (blxHashTable*)malloc(sizeof(blxHashTable));
     ht->_keySize = keySize;
     ht->_valueSize = valueSize;
     ht->KeyCompare = Compare;
     ht->_buckets = (blxLinkedNode**)malloc(sizeof(blxLinkedNode*) * tableSize);
-    for (size_t i = 0; i < tableSize; i++)
+    for (uint64 i = 0; i < tableSize; i++)
     {
         ht->_buckets[i] = blxCreateLinkedNode(NULL);
     }
     ht->tableArraySize = tableSize;
+    ht->ToHash = ToHash;
     return ht;
 }
 
-static blxLinkedNode* _blxLinkedNodeFromHashKey(blxHashTable* table, void* key)
+static blxLinkedNode* _blxLinkedNodeFromHashKey(blxHashTable* table, const void* key)
 {
-    size_t index = _blxToHash(key, table->_keySize) % table->tableArraySize;
+    uint64 index;
+    _BLXTABLE_GET_BUCKET_INDEX(table, key, &index);
     blxLinkedNode* currentNode = table->_buckets[index];
     while (currentNode)
     {
