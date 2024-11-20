@@ -133,7 +133,6 @@ static blxBool blxHashTableKeyExist(blxHashTable* table, void* key, void* outVal
 
     uint64 index;
     _BLXTABLE_GET_BUCKET_INDEX(table, key, &index);
-    BLXERROR("%i", index);
     blxLinkedNode* currentNode = table->_buckets[index];
     while (currentNode)
     {

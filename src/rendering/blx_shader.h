@@ -3,16 +3,20 @@
 #include "GL/glew.h"
 #include "rendering/blx_texture.h"
 #include "cglm/cglm.h"
+#include "rendering/blx_renderingTypes.h"
 
 
-typedef GLuint Shader;
+typedef unsigned int Shader;
 
-BLXAPI Shader shader_create(const char* fragPath, const char* vertPath, GLboolean useShader);
-BLXAPI void shader_setBool(Shader shader, const char* name, GLboolean value);
-BLXAPI void shader_setInt(Shader shader, const char* name, GLint value);
-BLXAPI void shader_setFloat(Shader shader, const char* name, GLfloat value);
-BLXAPI void shader_setFloat4f(Shader shader, const char* name, vec4 value);
-BLXAPI void shader_setMatrix4f(Shader shader, const char* name, mat4 mat);
-BLXAPI void shader_useShader(Shader shader);
-BLXAPI void shader_useTexture(Shader shader, Texture* texture, const char* samplerName);
-BLXAPI void shader_setVec3(Shader shader, const char* name, vec3 value);
+//TODO: Remove useShader parameter.
+BLXAPI Shader blxShaderCreate(const char* fragPath, const char* vertPath, GLboolean useShader);
+BLXAPI void blxShaderSetBool(Shader shader, const char* name, GLboolean value);
+BLXAPI void blxShaderSetInt(Shader shader, const char* name, GLint value);
+BLXAPI void blxShaderSetFloat(Shader shader, const char* name, GLfloat value);
+BLXAPI void blxShaderSetVec4(Shader shader, const char* name, vec4 value);
+BLXAPI void blxShaderSetMatrix4f(Shader shader, const char* name, mat4 mat);
+BLXAPI void blxShaderUseShader(Shader shader);
+BLXAPI void blxShaderUseTexture(Shader shader, Texture* texture, const char* samplerName);
+BLXAPI void blxShaderSetVec3(Shader shader, const char* name, vec3 value);
+
+void _blxShaderSystemInitialize(GraphicsAPI graphicApi);

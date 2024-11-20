@@ -6,6 +6,7 @@
 #include "blx_input.h"
 #include "utils/blx_clock.h"
 
+
 typedef struct {
     blxBool isRunning;
     blxBool isSuspended;

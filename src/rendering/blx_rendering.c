@@ -10,6 +10,8 @@
 #include "utils/blx_hashTable.h"
 #include "core/blx_logger.h"
 #include "core/blx_memory.h"
+#include "rendering/blx_material.h"
+#include "rendering/blx_shader.h"
 
 typedef struct
 {
@@ -46,7 +48,10 @@ void blxInitRenderer(GraphicsAPI graphicsToUse)
         blxZeroMemory(&renderer->packet, sizeof(blxRenderPacket));
         //TODO: TEMP FOR NOW TILL WE GET A MATERIAL SYSTEM.
         renderer->packet.directionalLight.diffuse = (vec3s){ 1.0f, 1.0f, 1.0f };
+
         initialized = BLX_TRUE;
+        _blxInitMaterialSystem();
+
     }
 
     switch (graphicsToUse)
@@ -110,6 +115,9 @@ void blxInitRenderer(GraphicsAPI graphicsToUse)
     blxAddValueToList(defaultUIGeometry.indices, 3);
     //End TODO
     renderer->UpdateMesh(&defaultUIGeometry);
+
+
+    _blxShaderSystemInitialize(graphicsToUse);
 }
 
 
@@ -207,7 +215,6 @@ void blxImportMesh(const char* filePath, blxMesh* outMesh)
                 char secondChar = lineBuffer[1];
                 switch (secondChar)
                 {
-
                     case ' ': { // Vertex Position
                         vec3s pos;
                         char temp[2];
@@ -277,7 +284,7 @@ void blxImportMesh(const char* filePath, blxMesh* outMesh)
                     }
                     else {
                         vertexIndex = blxGetListCount(outMesh->vertices) - 1;
-                        blxAddToHashTable(table, triangleP1, vertexIndex);
+                        blxAddToHashTableAlloc(table, triangleP1, vertexIndex);
                         blxAddValueToList(outMesh->indices, vertexIndex);
                     }
 
@@ -291,7 +298,7 @@ void blxImportMesh(const char* filePath, blxMesh* outMesh)
                     }
                     else {
                         vertexIndex = blxGetListCount(outMesh->vertices) - 1;
-                        blxAddToHashTable(table, triangleP2, vertexIndex);
+                        blxAddToHashTableAlloc(table, triangleP2, vertexIndex);
                         blxAddValueToList(outMesh->indices, vertexIndex);
                     }
 
@@ -305,7 +312,7 @@ void blxImportMesh(const char* filePath, blxMesh* outMesh)
                     }
                     else {
                         vertexIndex = blxGetListCount(outMesh->vertices) - 1;
-                        blxAddToHashTable(table, triangleP3, vertexIndex);
+                        blxAddToHashTableAlloc(table, triangleP3, vertexIndex);
                         blxAddValueToList(outMesh->indices, vertexIndex);
                     }
 

@@ -4,10 +4,7 @@
 #include "rendering/blx_mesh.h"
 #include "rendering/blx_model.h"
 #include "rendering/lighting/blx_lightingTypes.h"
-
-typedef enum {
-    OPENGL
-}GraphicsAPI;
+#include "rendering/blx_material.h"
 
 typedef struct
 {
@@ -38,7 +35,6 @@ BLXAPI void blxAddCameraToRender(Camera* cam);
 BLXAPI void blxDraw();
 BLXAPI void blxUpdateMesh(blxMesh* mesh);
 BLXAPI void blxImportMesh(const char* filePath, blxMesh* outMesh);
-
 
 
 

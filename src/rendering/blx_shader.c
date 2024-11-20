@@ -2,6 +2,37 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <stdlib.h>
+#include "utils/blx_fileManagement.h"
+#include "internal/opengl.h"
+#include "core/blx_memory.h"
+
+typedef struct {
+	void (*SetFloat) (Shader shader, const char* name, float value);
+	void (*SetInt) (Shader shader, const char* name, int value);
+	void (*SetBool) (Shader shader, const char* name, blxBool value);
+	void (*SetVec3f) (Shader shader, const char* name, vec3 value);
+	void (*SetVec4f) (Shader shader, const char* name, vec4 value);
+	void (*SetMatrix4f) (Shader shader, const char* name, mat4 value);
+	Shader(*CreateShader) (const char* fragSource, const char* vertSource);
+}ShaderSystem;
+
+ShaderSystem shaderSystem;
+
+void _blxShaderSystemInitialize(GraphicsAPI graphicApi)
+{
+	switch (graphicApi)
+	{
+		case OPENGL:
+			shaderSystem.SetFloat = blxGLSetFloat;
+			shaderSystem.SetInt = blxGLSetInt;
+			shaderSystem.SetVec4f = blxGLSetVec4f;
+			shaderSystem.SetBool = blxGLSetBool;
+			shaderSystem.SetVec3f = blxGLSetVec3f;
+			shaderSystem.SetMatrix4f = blxGLSetMatrix4f;
+			shaderSystem.CreateShader = blxGLCreateShader;
+			break;
+	}
+}
 
 blxBool shader_checkError(GLuint shader, GLenum errorType)
 {
@@ -48,102 +79,122 @@ char* shader_parse(const char* path)
 	return buffer;
 }
 
-Shader shader_create(const char* fragPath, const char* vertPath, GLboolean useShader)
+Shader blxShaderCreate(const char* fragPath, const char* vertPath, GLboolean useShader)
 {
-	char* fragSource = shader_parse(fragPath);
-	char* vertSource = shader_parse(vertPath);
-	blxBool shaderSuccess;
-	if (!vertSource)
-	{
-		printf("[SHADER ERROR] Vertex Shader file path not found at: %s", vertPath);
-		return -1;
-	}
-	if (!fragSource)
-	{
-		printf("[SHADER ERROR] Fragment Shader file path not found at: %s", fragPath);
-		return -1;
-	}
+	blxFile* fragFile;
+	blxFile* vertFile;
 
-	unsigned int vertexShader;
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertSource, NULL);
-	glCompileShader(vertexShader);
-	if (shader_checkError(vertexShader, GL_COMPILE_STATUS))
-	{
-		return -1;
-	}
+	blxOpenFile(fragPath, BLX_FILE_MODE_READ, &fragFile);
+	blxOpenFile(vertPath, BLX_FILE_MODE_READ, &vertFile);
+	uint64 fragSize, vertSize;
+	char* fragSource = blxFileReadAllText(fragFile, &fragSize);
+	char* vertSource = blxFileReadAllText(vertFile, &vertSize);
 
-	unsigned int fragmentShader;
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragSource, NULL);
-	glCompileShader(fragmentShader);
-	if (shader_checkError(fragmentShader, GL_COMPILE_STATUS))
-	{
-		return -1;
-	}
+	Shader shader = shaderSystem.CreateShader(fragSource, vertSource);
 
-	unsigned int shaderProgram;
-	shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-	// TODO: ERROR IS HERE ON LINE 91, PLS FIX!
-	//Use glGetProgramiv instead of shaderiv.
-	// if (shader_checkError(shaderProgram, GL_LINK_STATUS))
+	blxFree(fragSource, fragSize, BLXMEMORY_TAG_STRING);
+	blxFree(vertSource, vertSize, BLXMEMORY_TAG_STRING);
+
+	return shader;
+
+	// char* fragSource = shader_parse(fragPath);
+	// char* vertSource = shader_parse(vertPath);
+
+
+
+	// blxBool shaderSuccess;
+	// if (!vertSource)
+	// {
+	// 	printf("[SHADER ERROR] Vertex Shader file path not found at: %s", vertPath);
+	// 	return -1;
+	// }
+
+	// if (!fragSource)
+	// {
+	// 	printf("[SHADER ERROR] Fragment Shader file path not found at: %s", fragPath);
+	// 	return -1;
+	// }
+
+	// unsigned int vertexShader;
+	// vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	// glShaderSource(vertexShader, 1, &vertSource, NULL);
+	// glCompileShader(vertexShader);
+	// if (shader_checkError(vertexShader, GL_COMPILE_STATUS))
 	// {
 	// 	return -1;
 	// }
 
-	if (useShader)
-	{
-		glUseProgram(shaderProgram);
-	}
+	// unsigned int fragmentShader;
+	// fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	// glShaderSource(fragmentShader, 1, &fragSource, NULL);
+	// glCompileShader(fragmentShader);
+	// if (shader_checkError(fragmentShader, GL_COMPILE_STATUS))
+	// {
+	// 	return -1;
+	// }
 
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+	// unsigned int shaderProgram;
+	// shaderProgram = glCreateProgram();
+	// glAttachShader(shaderProgram, vertexShader);
+	// glAttachShader(shaderProgram, fragmentShader);
+	// glLinkProgram(shaderProgram);
+	// // TODO: ERROR IS HERE ON LINE 91, PLS FIX!
+	// //Use glGetProgramiv instead of shaderiv.
+	// // if (shader_checkError(shaderProgram, GL_LINK_STATUS))
+	// // {
+	// // 	return -1;
+	// // }
 
-	free(fragSource);
-	free(vertSource);
-	return shaderProgram;
+	// if (useShader)
+	// {
+	// 	glUseProgram(shaderProgram);
+	// }
+
+	// glDeleteShader(vertexShader);
+	// glDeleteShader(fragmentShader);
+
+	// free(fragSource);
+	// free(vertSource);
+	// return shaderProgram;
 }
 
-void shader_setBool(Shader shader, const char* name, GLboolean value)
+void blxShaderSetBool(Shader shader, const char* name, GLboolean value)
 {
-	glUniform1i(shader_getUniform(shader, name), value);
+	shaderSystem.SetBool(shader, name, value);
 }
 
-void shader_setInt(Shader shader, const char* name, GLint value)
+void blxShaderSetInt(Shader shader, const char* name, GLint value)
 {
-	glUniform1i(shader_getUniform(shader, name), value);
+	shaderSystem.SetInt(shader, name, value);
 }
 
-void shader_setFloat(Shader shader, const char* name, GLfloat value)
+void blxShaderSetFloat(Shader shader, const char* name, GLfloat value)
 {
-	glUniform1f(shader_getUniform(shader, name), value);
+	shaderSystem.SetFloat(shader, name, value);
 }
 
-void shader_setFloat4f(Shader shader, const char* name, vec4 value)
+void blxShaderSetVec4(Shader shader, const char* name, vec4 value)
 {
-	glUniform4f(shader_getUniform(shader, name), value[0], value[1], value[2], value[3]);
+	shaderSystem.SetVec4f(shader, name, value);
 }
 
-void shader_setMatrix4f(Shader shader, const char* name, mat4 mat)
+void blxShaderSetMatrix4f(Shader shader, const char* name, mat4 mat)
 {
-	glUniformMatrix4fv(shader_getUniform(shader, name), 1, GL_FALSE, mat);
+	shaderSystem.SetMatrix4f(shader, name, mat);
 }
 
-void shader_setVec3(Shader shader, const char* name, vec3 value) 
+void blxShaderSetVec3(Shader shader, const char* name, vec3 value)
 {
-	glUniform3f(shader_getUniform(shader, name), value[0], value[1], value[2]);
+	shaderSystem.SetVec3f(shader, name, value);
 }
 
-void shader_useShader(Shader shader)
+void blxShaderUseShader(Shader shader)
 {
 	glUseProgram(shader);
 }
 
-void shader_useTexture(Shader shader, Texture* texture, const char* samplerName)
+void blxShaderUseTexture(Shader shader, Texture* texture, const char* samplerName)
 {
 	texture_setActive(texture);
-	shader_setInt(shader, samplerName, texture->textureSlot);
+	blxShaderSetInt(shader, samplerName, texture->textureSlot);
 }

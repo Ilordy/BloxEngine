@@ -19,7 +19,7 @@ uint64 blxStrLen(const char* str)
     return strlen(str);
 }
 
-BLXAPI blxBool blxStrNullOrEmptry(const char* str)
+blxBool blxStrNullOrEmpty(const char* str)
 {
     return str && !str[0];
 }

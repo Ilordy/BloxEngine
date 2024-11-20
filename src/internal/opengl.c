@@ -1,5 +1,4 @@
 #include "opengl.h"
-#include "GL/glew.h"
 #include "rendering/blx_rendering.h"
 #include "core/blx_logger.h"
 //TODO: Add support for index buffers
@@ -32,13 +31,13 @@ void OpenGLDraw(blxRenderPacket* packet)
         glMeshData* md = (glMeshData*)mesh._meshData;
         glUseProgram(mesh.shader);
         glBindVertexArray(md->VAO);
-        shader_setMatrix4f(mesh.shader, "projection", packet->cam->projecionMatrix);
+        blxShaderSetMatrix4f(mesh.shader, "projection", packet->cam->projecionMatrix);
         //for specular lighting, possibly temp for now.
-        shader_setVec3(mesh.shader, "camPos", packet->cam->transform.position);
+        blxShaderSetVec3(mesh.shader, "camPos", packet->cam->transform.position);
         mat4 modelMatrix;
         _transform_modelMatrix(&packet->models[i].transform, modelMatrix);
-        shader_setMatrix4f(mesh.shader, "model", modelMatrix);
-        shader_setMatrix4f(mesh.shader, "view", packet->cam->viewMatrix);
+        blxShaderSetMatrix4f(mesh.shader, "model", modelMatrix);
+        blxShaderSetMatrix4f(mesh.shader, "view", packet->cam->viewMatrix);
         glDrawElements(GL_TRIANGLES, blxGetListCount(mesh.indices), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }
@@ -52,11 +51,11 @@ void OpenGLDraw(blxRenderPacket* packet)
         glBindVertexArray(md->VAO);
         mat4 proj;
         _blxGetCameraProjection(&packet->cam, ORTHOGRAPHIC, proj);
-        shader_setMatrix4f(mesh.shader, "projection", proj);
+        blxShaderSetMatrix4f(mesh.shader, "projection", proj);
         mat4 modelMatrix;
         _transform_modelMatrix(&packet->ui[i].transform, modelMatrix);
-        shader_setMatrix4f(mesh.shader, "model", modelMatrix);
-        shader_setMatrix4f(mesh.shader, "view", GLM_MAT4_IDENTITY);
+        blxShaderSetMatrix4f(mesh.shader, "model", modelMatrix);
+        blxShaderSetMatrix4f(mesh.shader, "view", GLM_MAT4_IDENTITY);
         glDrawElements(GL_TRIANGLES, blxGetListCount(mesh.indices), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }
@@ -117,6 +116,117 @@ void OpenGLSetShadingMode(blxShadingMode mode)
             break;
     }
 }
+
+#pragma region Shaders
+static blxBool blxGLCheckShaderError(GLuint shader, GLenum errorType)
+{
+    //DELETE THIS FUNC IF ONLY USE IS FOR GL_COMPILE_STATUS....
+    blxBool success;
+    char log[512];
+    glGetShaderiv(shader, errorType, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(shader, 512, NULL, log);
+        printf("[SHADER ERROR] %s", log);
+        glGetShaderSource(shader, 512, NULL, log);
+        printf("%s", log);
+    }
+    return !success;
+}
+
+GLuint blxGLCreateShader(const char* fragSource, const char* vertSource)
+{
+    char errorLog[512];
+    blxBool compiled;
+
+    GLuint vertexShader;
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertSource, NULL);
+    glCompileShader(vertexShader);
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &compiled);
+    if (!compiled)
+    {
+        glGetShaderInfoLog(vertexShader, sizeof(errorLog), NULL, errorLog);
+        BLXERROR("%s\n Source Code:\n %s", errorLog, vertSource);
+        return -1;
+    }
+
+    GLuint fragmentShader;
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragSource, NULL);
+    glCompileShader(fragmentShader);
+    if (!compiled)
+    {
+        glGetShaderInfoLog(fragmentShader, sizeof(errorLog), NULL, errorLog);
+        BLXERROR("%s\n Source Code:\n %s", errorLog, fragSource);
+        return -1;
+    }
+
+    GLuint shaderProgram;
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+    // TODO: ERROR IS HERE ON LINE 91, PLS FIX!
+    //Use glGetProgramiv instead of shaderiv.
+    // if (shader_checkError(shaderProgram, GL_LINK_STATUS))
+    // {
+    // 	return -1;
+    // }
+
+    // if (useShader)
+    // {
+    //     glUseProgram(shaderProgram);
+    // }
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    return shaderProgram;
+}
+
+
+static GLint blxGLGetUniform(GLuint shader, const char* name)
+{
+    //TODO: Figure out if this is temporary...
+    GLint loc = glGetUniformLocation(shader, name);
+    if (loc == -1)
+    {
+        BLXWARNING("Shader uniform %s not found!", name);
+    }
+    return loc;
+}
+
+void blxGLSetFloat(GLuint shader, const char* uniformName, GLfloat value)
+{
+    glUniform1f(blxGLGetUniform(shader, uniformName), value);
+}
+
+void blxGLSetInt(GLuint shader, const char* uniformName, GLint value)
+{
+    glUniform1i(blxGLGetUniform(shader, uniformName), value);
+}
+
+void blxGLSetVec4f(GLuint shader, const char* uniformName, vec4 value)
+{
+    glUniform4f(blxGLGetUniform(shader, uniformName), value[0], value[1], value[2], value[3]);
+}
+
+void blxGLSetBool(GLuint shader, const char* uniformName, GLboolean value)
+{
+    glUniform1i(blxGLGetUniform(shader, uniformName), value);
+}
+
+void blxGLSetVec3f(GLuint shader, const char* uniformName, vec3 value)
+{
+    glUniform3f(blxGLGetUniform(shader, uniformName), value[0], value[1], value[2]);
+}
+
+void blxGLSetMatrix4f(GLuint shader, const char* uniformName, mat4 value)
+{
+    glUniformMatrix4fv(blxGLGetUniform(shader, uniformName), 1, GL_FALSE, value);
+}
+#pragma endregion
 
 
 
