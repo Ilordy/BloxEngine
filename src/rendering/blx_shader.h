@@ -5,9 +5,6 @@
 #include "cglm/cglm.h"
 #include "rendering/blx_renderingTypes.h"
 
-
-typedef unsigned int Shader;
-
 //TODO: Remove useShader parameter.
 BLXAPI Shader blxShaderCreate(const char* fragPath, const char* vertPath, GLboolean useShader);
 BLXAPI void blxShaderSetBool(Shader shader, const char* name, GLboolean value);

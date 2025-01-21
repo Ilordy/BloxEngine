@@ -5,6 +5,7 @@
 #include "rendering/blx_shader.h"
 #include "cglm/struct/vec3.h"
 
+
 typedef struct {
     vec3s position;
     vec3s normal;
@@ -17,7 +18,6 @@ typedef unsigned int vList_indices;
 typedef struct {
     vList_blxVertex* vertices;
     vList_indices* indices;
-    Shader shader;
     /// @brief Internal use only
     void* _meshData;
 } blxMesh;

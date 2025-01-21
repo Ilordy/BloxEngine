@@ -1,201 +1,16 @@
-#include "blx_rendering.h"
-#include "GL/glew.h"
-#include <malloc.h>
-#include "internal/opengl.h"
-#include <stdio.h>
-#include <sys/stat.h>
-#include <stdlib.h>
-#include "cglm/struct/vec3.h"
-#include "cglm/struct/vec2.h"
+#include "core/loaders/blx_objLoader.h"
+#include "blx_objLoader.h"
+#include "rendering/blx_rendering.h"
 #include "utils/blx_hashTable.h"
-#include "core/blx_logger.h"
-#include "core/blx_memory.h"
-#include "rendering/blx_material.h"
-#include "rendering/blx_shader.h"
-
-typedef struct
-{
-    void (*Init)();
-    void (*Draw)(blxRenderPacket* packet);
-    void (*UpdateMesh)(blxMesh*);
-    void (*InitMesh)(blxMesh*);
-    void (*SetShadingMode) (blxShadingMode mode);
-    void (*RegisterBatch) (MaterialGroup matGroup);
-    blxRenderPacket packet;
-} blxRenderer;
-
-
-
-blxRenderer* renderer;
-static blxBool initialized = BLX_FALSE;
-static blxMesh defaultUIGeometry;
-
-
-// TODO: Move this to logger! ----
-void GLDebug(GLenum source, GLenum type, GLuint id,
-    GLenum severity, GLsizei length,
-    const GLchar* msg, const void* data)
-{
-    printf("-------\n");
-    printf("%s\n", msg);
-    printf("%s %d\n", __FILE__, __LINE__);
-    printf("-------\n");
-}
-// -------
-
-
-void blxInitRenderer(GraphicsAPI graphicsToUse)
-{
-    if (!initialized) {
-        //Instead of malloc might be better to just have a static state.
-        renderer = (blxRenderer*)malloc(sizeof(blxRenderer));
-        blxZeroMemory(&renderer->packet, sizeof(blxRenderPacket));
-        //TODO: TEMP FOR NOW TILL WE GET A MATERIAL SYSTEM.
-        renderer->packet.directionalLight.diffuse = (vec3s){ 1.0f, 1.0f, 1.0f };
-        //TODO: Dynamic allocator / Free List.
-        renderer->packet.vlist_materialGroups = blxInitListWithSize(MaterialGroup, 32);
-        initialized = BLX_TRUE;
-        _blxInitMaterialSystem();
-    }
-
-    switch (graphicsToUse)
-    {
-        case OPENGL:
-            renderer->Draw = OpenGLDraw;
-            renderer->Init = OpenGLInit;
-            renderer->InitMesh = OpenGLInitMesh;
-            renderer->UpdateMesh = OpenGLUpdateMesh;
-            renderer->SetShadingMode = OpenGLSetShadingMode;
-            renderer->RegisterBatch = blxGLRegisterBatch;
-            glEnable(GL_DEBUG_OUTPUT);
-            glDebugMessageCallback(GLDebug, 0);
-            BLXINFO("Initializing Renderer with OpenGL...");
-            break;
-    }
-
-    renderer->Init();
-    renderer->InitMesh(&defaultUIGeometry);
-    //TODO: Make these vertices and indices part of a built in obj file.
-    defaultUIGeometry.vertices = blxInitListWithSize(vList_blxVertex, 4);
-    defaultUIGeometry.indices = blxInitListWithSize(vList_indices, 6);
-
-    blxAddValueToList(defaultUIGeometry.vertices, ((blxVertex)
-        //position
-    {   0.5f, 0.5f, 0.0f,
-        //normal
-        0.0f, 0.0f, 0.0f,
-        //uv
-        1.0f, 1.0f
-    }));
-    blxAddValueToList(defaultUIGeometry.vertices, ((blxVertex)
-        //position
-    {   0.5f, -0.5f, 0.0f,
-        //normal
-        0.0f, 0.0f, 0.0f,
-        //uv
-        1.0f, 0.0f
-    }));
-    blxAddValueToList(defaultUIGeometry.vertices, ((blxVertex)
-        //position
-    {   -0.5f, -0.5f, 0.0f,
-        //normal
-        0.0f, 0.0f, 0.0f,
-        //uv
-        0.0f, 0.0f
-    }));
-    blxAddValueToList(defaultUIGeometry.vertices, ((blxVertex)
-        //position
-    {   -0.5f, 0.5f, 0.0f,
-        //normal
-        0.0f, 0.0f, 0.0f,
-        //uv
-        0.0f, 1.0f
-    }));
-
-    blxAddValueToList(defaultUIGeometry.indices, 0);
-    blxAddValueToList(defaultUIGeometry.indices, 1);
-    blxAddValueToList(defaultUIGeometry.indices, 3);
-    blxAddValueToList(defaultUIGeometry.indices, 1);
-    blxAddValueToList(defaultUIGeometry.indices, 2);
-    blxAddValueToList(defaultUIGeometry.indices, 3);
-    //End TODO
-    renderer->UpdateMesh(&defaultUIGeometry);
-
-
-    _blxShaderSystemInitialize(graphicsToUse);
-}
-
-
-void blxAddCameraToRender(Camera* cam)
-{
-    renderer->packet.cam = cam;
-}
-
-void blxDrawModel(blxModel* model)
-{
-    //TODO: This needs to be refactored!
-    for (unsigned int i = 0; i < model->mCount; i++)
-    {
-        MaterialGroup group = renderer->packet.vlist_materialGroups[model->materials[i]->id];
-        //TODO: pointers to a mesh should be added here instead of copying the whole mesh itself..
-        blxAddValueToList(group.vlist_meshes, model->meshes[i])
-        blxAddArrayToList(group.vertices, model->meshes[i].vertices, blxGetListCount(model->meshes[i].vertices));
-        blxAddArrayToList(group.indices, model->meshes[i].indices, blxGetListCount(model->meshes[i].indices));
-    }
-
-    renderer->packet.models[renderer->packet.modelCount] = *model;
-    renderer->packet.modelCount += 1;
-}
-
-void blxDrawUI(blxModel* model)
-{
-    renderer->packet.ui[renderer->packet.uiCount] = *model;
-    renderer->packet.uiCount += 1;
-}
-
-void blxInitMesh(blxMesh* mesh)
-{
-    renderer->InitMesh(mesh);
-}
-
-void blxSetShadingMode(blxShadingMode mode)
-{
-    renderer->SetShadingMode(mode);
-}
-
-void blxDraw()
-{
-    camera_update(renderer->packet.cam);
-    renderer->Draw(&renderer->packet);
-    renderer->packet.modelCount = 0;
-    renderer->packet.uiCount = 0;
-    for (uint64 i = 0; i < blxGetListCount(renderer->packet.vlist_materialGroups); i++)
-    {
-        blxClearList(renderer->packet.vlist_materialGroups[i].vlist_meshes);
-    }
-}
-
-void blxUpdateMesh(blxMesh* mesh)
-{
-    renderer->UpdateMesh(mesh);
-}
-
-void _blxRendererRegisterMaterial(blxMaterial* material)
-{
-    MaterialGroup matGroup;
-    matGroup.material = material;
-    matGroup.material->id = blxGetListCount(renderer->packet.vlist_materialGroups);
-    matGroup.vertices = blxInitList(blxVertex);
-    matGroup.indices = blxInitList(unsigned int);
-    blxAddValueToList(renderer->packet.vlist_materialGroups, matGroup);
-}
-
-// TODO: Move this into a obj.c file for loading obj files...
-//---------------------------------------------------------------
+#include "utils/blx_fileManagement.h"
+#include "core/blx_string.h"
+//TODO: Move into resource system/ resource loader.
 
 typedef struct {
     unsigned int posIndex, texIndex, normIndex;
 }ObjVertex;
+
+
 
 blxBool VertexKeyCompare(void* a, void* b)
 {
@@ -217,23 +32,23 @@ blxBool VertexKeyCompare(void* a, void* b)
     return BLX_TRUE;
 }
 
-void blxImportMesh(const char* filePath, blxMesh* outMesh)
-{
 
-    // TODO: CLEAN THIS OUT AND OPTIMIZE LOADING, OPTIONALLY MAKE THIS MULTITHREADED.
-    blxInitMesh(outMesh);
+static blxBool ExtractMesh(blxMesh* outMesh, blxFile* objFile)
+{
+    //blxInitMesh(outMesh);
     blxHashTable* table = blxCreateHashTable(blxVertex, unsigned int, VertexKeyCompare);
+
     outMesh->vertices = blxInitList(vList_blxVertex);
     outMesh->indices = blxInitList(vList_indices);
     vec3s* positions = blxInitList(vec3s);
     vec3s* normals = blxInitList(vec3s);
     vec2s* texCoords = blxInitList(vec2s);
-    FILE* file;
-    file = fopen(filePath, "r");
-    char lineBuffer[1024];
-    while (fgets(lineBuffer, sizeof(lineBuffer), file))
+
+    char lineBuffer[512];
+    char* p = &lineBuffer;
+    uint64 lineLength;
+    while (blxFileReadLine(objFile, 1024, &p, &lineLength))
     {
-        //printf("%s", lineBuffer);
         char firstChar = lineBuffer[0];
         switch (firstChar)
         {
@@ -430,24 +245,35 @@ void blxImportMesh(const char* filePath, blxMesh* outMesh)
 
             } break;
 
+
+            case 'u': {
+                
+                if (lineLength > 6)
+                {
+                    const char* firstWord;
+                    blxStrnCpy(firstWord, lineBuffer, 6);
+                    if(blxStrCmp(firstWord, "usemtl")){
+                        //Grab material here!
+                        //Assuming mat name is less than 64..
+                        char matName[65];
+                        blxStrCpy(matName, lineBuffer[7]);
+                        //TODO: Assign material name!
+                        blxMaterial* mat = blxMaterial_CreateDefault();
+                        
+                        break;
+                    }
+                }
+                
+        
+            }break;
         }
     }
-    blxUpdateMesh(outMesh);
-    printf("Indices list count: %d\n", blxGetListCount(outMesh->indices));
-    printf("Vertex count %d\n", blxGetListCount(outMesh->vertices));
-    for (size_t i = 0; i < blxGetListCount(outMesh->vertices); i++)
-    {
-        vec3s pos = outMesh->vertices[i].position;
-        printf("Vertex pos at Index: %d with mesh index being: %d: (%f, %f, %f)\n", i, outMesh->indices[i], pos.raw[0], pos.raw[1], pos.raw[2]);
-    }
 
-    // for (size_t i = 0; i < blxGetListCount(texCoords); i++)
-    // {
-    //     PRINTVEC2S(texCoords[i]);
-    // }
     blxFreeHashTable(table);
 }
 
-//---------------------------------------------------------------
-
-
+void blxImportModelFromObj(blxModel* outModel, const char* objPath)
+{
+    blxInitModel(outModel);
+    //ExtractMesh()
+}

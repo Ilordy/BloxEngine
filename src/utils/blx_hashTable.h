@@ -9,6 +9,7 @@
 
 // TODO: Add support for assertsions.
 // TODO: Add support for memory arenas.
+// TODO: Consider using a blx_vList instead of a linkedlist.
 // TODO: Refactor
 
 static uint64 blxToHash(void* key, uint64 size);

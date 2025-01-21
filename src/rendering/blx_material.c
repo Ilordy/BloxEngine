@@ -36,10 +36,34 @@ static const char* const materialKeyWords[] = {
     MAT_KEY(vec3)
 };
 
+typedef enum {
+    BLX_MAT_PROP_INT,
+    BLX_MAT_PROP_FLOAT,
+    BLX_MAT_PROP_VEC3,
+    BLX_MAT_PROP_VEC4
+}blxMaterialPropertyType;
+
+typedef struct
+{
+    const char propertyName[128];
+    blxMaterialPropertyType propertyType;
+    union
+    {
+        int intValue;
+        float floatValue;
+        vec3s vec3Value;
+        vec4s vec4Value;
+    };
+}blxMaterialProperty;
+
+typedef blxMaterialProperty* list_blxMaterialProperty;
+
 typedef struct {
     const char* path;
     unsigned int referenceCount;
     unsigned int index;
+    /// @brief properties list of type blxMaterialProperty.
+    list_blxMaterialProperty properties;
 }MaterialData;
 
 blxBool StringCompare(void* a, void* b)
@@ -64,6 +88,36 @@ void _blxInitMaterialSystem()
     blxAddToHashTableAlloc(matKeyTypes, MAT_KEY_VEC4, VEC4_CASE);
 }
 
+void _blxMaterialSetValues(blxMaterial* mat)
+{
+    MaterialData* matData = (MaterialData*)mat->_internalData;
+
+    for (uint64 i = 0; i < blxGetListCount(matData->properties); i++)
+    {
+        blxMaterialProperty prop = matData->properties[i];
+        switch (prop.propertyType)
+        {
+            case BLX_MAT_PROP_INT:
+                blxShaderSetInt(mat->shader, prop.propertyName, prop.intValue);
+                break;
+
+            case BLX_MAT_PROP_FLOAT:
+                blxShaderSetFloat(mat->shader, prop.propertyName, prop.floatValue);
+                break;
+
+            case BLX_MAT_PROP_VEC3:
+                blxShaderSetVec3(mat->shader, prop.propertyName, prop.vec3Value.raw);
+                break;
+
+            case BLX_MAT_PROP_VEC4:
+                blxShaderSetVec4(mat->shader, prop.propertyName, prop.vec4Value.raw);
+                break;
+        }
+    }
+}
+
+
+//TODO: use a list or memory arena and also make a stack.h utility for finding an open index.
 blxBool MaterialExists(blxMaterial* mat)
 {
     MaterialData* matData = (MaterialData*)mat->_internalData;
@@ -94,13 +148,16 @@ int FindFreeSlot()
     return -1;
 }
 
-blxBool LoadAndParseBmtFile(const char* path)
+blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
 {
     // TODO: Move to a seperate function.
     blxFile* matFile;
     if (!blxOpenFile(path, BLX_FILE_MODE_READ, &matFile)) {
         return BLX_FALSE;
     }
+
+    MaterialData* matData = (MaterialData*)mat->_internalData;
+    matData->properties = blxInitList(blxMaterialProperty);
 
     char buffer[512];
     char* p = &buffer;
@@ -217,45 +274,87 @@ blxBool LoadAndParseBmtFile(const char* path)
 
                 switch (variableCase)
                 {
+                    //TODO: Setting shader values directly should not be done here!!
                     case FLOAT_CASE: {
-                    //mat set float yada
                         float value = atof(buffer + equalsIndex + 1);
-                        blxShaderSetFloat(matShader, uniformName, value);
+
+                        blxMaterialProperty property;
+                        property.propertyType = BLX_MAT_PROP_FLOAT;
+                        property.floatValue = value;
+                        blxStrCpy(property.propertyName, uniformName);
+                        blxAddValueToList(matData->properties, property);
                     }break;
 
                     case INT_CASE: {
                         int value = atoi(buffer + equalsIndex + 1);
-                        blxShaderSetInt(matShader, uniformName, value);
+
+                        blxMaterialProperty property;
+                        property.propertyType = BLX_MAT_PROP_INT;
+                        property.intValue = value;
+                        blxStrCpy(property.propertyName, uniformName);
+                        blxAddValueToList(matData->properties, property);
                     }break;
 
                     case VEC3_CASE: {
                         //TODO: Replace sscanf with blx function.
                         vec3 value = GLM_VEC3_ONE_INIT;
                         sscanf(buffer + equalsIndex + 1, "%f,%f,%f", &value[0], &value[1], &value[2]);
-                        blxShaderSetVec3(matShader, uniformName, value);
+
+                        blxMaterialProperty property;
+                        property.propertyType = BLX_MAT_PROP_VEC3;
+                        glm_vec3_copy(value, property.vec3Value.raw);
+                        blxStrCpy(property.propertyName, uniformName);
+                        blxAddValueToList(matData->properties, property);
                     }break;
 
-                    case VEC4_CASE:{
+                    case VEC4_CASE: {
                         vec4 value = GLM_VEC4_ONE_INIT;
-                        float val;
                         sscanf(buffer + equalsIndex + 1, "%f,%f,%f,%f", &value[0], &value[1], &value[2], &value[3]);
-                        blxShaderSetVec4(matShader, uniformName, value);
+
+                        blxMaterialProperty property;
+                        property.propertyType = BLX_MAT_PROP_VEC4;
+                        glm_vec4_copy(value, property.vec4Value.raw);
+                        blxStrCpy(property.propertyName, uniformName);
+                        blxAddValueToList(matData->properties, property);
                     }break;
                 }
             }break;
         }
 
+        //TODO: Our shader system/Resource System should keep track of what shaders are loaded.
         if (!matShader && !blxStrNullOrEmpty(fragPath) && !blxStrNullOrEmpty(vertPath))
         {
             matShader = blxShaderCreate(fragPath, vertPath, BLX_FALSE);
             blxShaderUseShader(matShader);
-
         }
     }
 
     return BLX_TRUE;
 }
 
+//TODO: This should be the new way of making materials.
+blxMaterial* blxMaterial_CreateDefault()
+{
+    blxMaterial* mat = blxAllocate(sizeof(blxMaterial) + sizeof(MaterialData) +
+        (sizeof(char) * blxMaxFilePath), BLXMEMORY_TAG_MATERIAL);
+
+    mat->_internalData = (char*)mat + sizeof(blxMaterial);
+    MaterialData* matData = (MaterialData*)mat->_internalData;
+
+    matData->path = (char*)mat + sizeof(blxMaterial) + sizeof(MaterialData);
+    //TODO: This is not neccessrary, refactor is needed!
+    matData->path = "res/materials/Standard.bmt";
+    materialCount++;;
+    matData->index = FindFreeSlot();
+    loadedMaterials[matData->index] = mat;
+    matData->referenceCount = 1;
+    _blxRendererRegisterMaterial(mat);
+    LoadAndParseBmtFile(matData->path, mat);
+    return mat;
+}
+
+//TODO: Change to just create material, keep an arena ready.
+//TODO: No need to use hashtables.
 blxBool blxLoadMaterial(const char* path, blxMaterial** outMat)
 {
     // TODO: Memory arena for materials.
@@ -294,9 +393,9 @@ blxBool blxLoadMaterial(const char* path, blxMaterial** outMat)
         loadedMaterials[matData->index] = mat;
         matData->referenceCount = 1;
 
-
+        _blxRendererRegisterMaterial(mat);
         *outMat = mat;
-        return LoadAndParseBmtFile(path);
+        return LoadAndParseBmtFile(path, mat);
     }
 
     return BLX_FALSE;

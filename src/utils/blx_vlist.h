@@ -13,7 +13,7 @@
     }
 #define blxAddArrayToList(list, array, arrayCount)\
 {\
-    for (size_t i = 0; i < arrayCount; i++)\
+    for (uint64 i = 0; i < arrayCount; i++)\
     {\
         blxAddValueToList(list, array[i]);\
     }\
@@ -84,3 +84,14 @@ static void blxRemoveFromListAt(void* list, unsigned int index)
 
     _BLX_SET_HEADER(list, _BLX_COUNT_I, count - 1);
 }
+
+static inline void blxClearList(void* list)
+{
+    _BLX_SET_HEADER(list, _BLX_COUNT_I, 0);
+}
+
+static inline void blxFreeList(void* list)
+{
+    free((char*)list - _BLX_HEADER_SIZE);
+}
+

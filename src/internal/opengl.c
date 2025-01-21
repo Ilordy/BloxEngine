@@ -1,14 +1,32 @@
 #include "opengl.h"
 #include "rendering/blx_rendering.h"
 #include "core/blx_logger.h"
+#include "core/blx_memory.h"
 //TODO: Add support for index buffers
-
 
 typedef struct
 {
-    unsigned int VAO, VBO, IBO;
+    GLuint VAO, VBO, IBO, cmdBuffer;
 }glMeshData;
 
+typedef struct {
+    /// @brief Number of indices.
+    GLuint  count;
+    /// @brief Number of instances to draw.
+    GLuint  instanceCount;
+    /// @brief Index offset in the indices array in which to start reading.
+    GLuint  firstIndex;
+    /// @brief Index offset in the vertices array in which to start reading.
+    GLuint  baseVertex;
+    /// @brief Any additioal data we want to pass to the GPU (gl_instanceID)
+    GLuint  baseInstance;
+}glDrawCommand;
+
+typedef glDrawCommand* vlist_glDrawCommand;
+
+static vlist_glDrawCommand drawCommands;
+static GLuint glIndirectBuffer;
+//static glDrawCommand* commands;
 
 void OpenGLInit()
 {
@@ -17,7 +35,54 @@ void OpenGLInit()
     glGetIntegerv(GL_MAJOR_VERSION, &versionMajor);
     GLint versionMinor;
     glGetIntegerv(GL_MINOR_VERSION, &versionMinor);
+    drawCommands = blxInitList(glDrawCommand);
     BLXINFO("OpenGL Initialized using GL Version: %d.%d", versionMajor, versionMinor);
+}
+
+void blxGLRegisterBatch(MaterialGroup matGroup)
+{
+    glMeshData* data = blxAllocate(sizeof(glMeshData), BLXMEMORY_TAG_RENDERER);
+    glGenVertexArrays(1, &data->VAO);
+    glBindVertexArray(data->VAO);
+    glGenBuffers(1, &data->cmdBuffer);
+    glGenBuffers(1, &data->VBO);
+    glGenBuffers(1, &data->IBO);
+    glBindBuffer(GL_ARRAY_BUFFER, data->VBO);
+
+    //Vertex positions
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(blxVertex), (void*)0);
+    glEnableVertexAttribArray(0);
+    //Vertex normals
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(blxVertex), (void*)offsetof(blxVertex, normal));
+    glEnableVertexAttribArray(1);
+    //Vertex UVs
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(blxVertex), (void*)offsetof(blxVertex, uv));
+    glEnableVertexAttribArray(2);
+    glBindVertexArray(0);
+    matGroup.renderData = data;
+}
+
+//TODO: Generate draw commands on a different thread.
+
+static void GenerateDrawCommands(struct MaterialGroup* batch)
+{
+    unsigned int numMeshes = blxGetListCount(batch->vlist_meshes);
+    unsigned int vertOffset = 0;
+    unsigned int indexOffset = 0;
+
+    for (uint64 i = 0; i < numMeshes; i++)
+    {
+        glDrawCommand command;
+        unsigned int numIndicies = blxGetListCount(batch->vlist_meshes[i].indices);
+        command.instanceCount = 1;
+        command.count = numIndicies;
+        command.firstIndex = indexOffset;
+        command.baseVertex = vertOffset;
+        command.baseInstance = i;
+        vertOffset += blxGetListCount(batch->vlist_meshes[i].vertices);
+        indexOffset += numIndicies;
+        blxAddValueToList(drawCommands, command);
+    }
 }
 
 void OpenGLDraw(blxRenderPacket* packet)
@@ -25,40 +90,69 @@ void OpenGLDraw(blxRenderPacket* packet)
     glClearColor(0.322f, 0.322f, 0.332f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    for (unsigned int i = 0; i < packet->modelCount; i++)
+    
+    for (uint64 i = 0; i < blxGetListCount(packet->vlist_materialGroups); i++)
     {
-        blxMesh mesh = packet->models[i].mesh;
-        glMeshData* md = (glMeshData*)mesh._meshData;
-        glUseProgram(mesh.shader);
-        glBindVertexArray(md->VAO);
-        blxShaderSetMatrix4f(mesh.shader, "projection", packet->cam->projecionMatrix);
-        //for specular lighting, possibly temp for now.
-        blxShaderSetVec3(mesh.shader, "camPos", packet->cam->transform.position);
-        mat4 modelMatrix;
-        _transform_modelMatrix(&packet->models[i].transform, modelMatrix);
-        blxShaderSetMatrix4f(mesh.shader, "model", modelMatrix);
-        blxShaderSetMatrix4f(mesh.shader, "view", packet->cam->viewMatrix);
-        glDrawElements(GL_TRIANGLES, blxGetListCount(mesh.indices), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+        MaterialGroup currentBatch = packet->vlist_materialGroups[i];
+        glMeshData* batchData = (glMeshData*)currentBatch.renderData;
+
+        glBindVertexArray(batchData->VAO);
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, batchData->cmdBuffer);
+
+        //Clear the list from the last draw call.
+        blxClearList(drawCommands);
+        GenerateDrawCommands(&currentBatch);
+
+        glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(glDrawCommand) * blxGetListCount(drawCommands), drawCommands, GL_DYNAMIC_DRAW);
+        glUseProgram(currentBatch.material->shader);
+
+        _blxMaterialSetValues(currentBatch.material);
+        
+        glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, (void*)0, blxGetListCount(drawCommands), 0);
     }
 
-    for (unsigned int i = 0; i < packet->uiCount; i++)
-    {
-        blxMesh mesh = packet->ui[i].mesh;
-        int g = blxGetListCount(mesh.vertices);
-        glMeshData* md = (glMeshData*)mesh._meshData;
-        glUseProgram(mesh.shader);
-        glBindVertexArray(md->VAO);
-        mat4 proj;
-        _blxGetCameraProjection(&packet->cam, ORTHOGRAPHIC, proj);
-        blxShaderSetMatrix4f(mesh.shader, "projection", proj);
-        mat4 modelMatrix;
-        _transform_modelMatrix(&packet->ui[i].transform, modelMatrix);
-        blxShaderSetMatrix4f(mesh.shader, "model", modelMatrix);
-        blxShaderSetMatrix4f(mesh.shader, "view", GLM_MAT4_IDENTITY);
-        glDrawElements(GL_TRIANGLES, blxGetListCount(mesh.indices), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-    }
+    //glMultiDrawElementsIndirect()
+    //glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, )
+        // for (unsigned int i = 0; i < packet->modelCount; i++)
+        // {
+        //     blxModel model = packet->models[i];
+        //     for (unsigned int j = 0; j < model.mCount; i++)
+        //     {
+        //         blxMesh* m = model.meshes[j];
+        //     }
+
+        //     blxMesh mesh = packet->models[i];
+        //     glMeshData* md = (glMeshData*)mesh._meshData;
+        //     glUseProgram(mesh.shader);
+        //     glBindVertexArray(md->VAO);
+        //     blxShaderSetMatrix4f(mesh.shader, "projection", packet->cam->projecionMatrix);
+        //     //for specular lighting, possibly temp for now.
+        //     blxShaderSetVec3(mesh.shader, "camPos", packet->cam->transform.position);
+        //     mat4 modelMatrix;
+        //     _transform_modelMatrix(&packet->models[i].transform, modelMatrix);
+        //     blxShaderSetMatrix4f(mesh.shader, "model", modelMatrix);
+        //     blxShaderSetMatrix4f(mesh.shader, "view", packet->cam->viewMatrix);
+        //     glDrawElements(GL_TRIANGLES, blxGetListCount(mesh.indices), GL_UNSIGNED_INT, 0);
+        //     glBindVertexArray(0);
+        // }
+
+        // for (unsigned int i = 0; i < packet->uiCount; i++)
+        // {
+        //     blxMesh mesh = packet->ui[i].mesh;
+        //     int g = blxGetListCount(mesh.vertices);
+        //     glMeshData* md = (glMeshData*)mesh._meshData;
+        //     glUseProgram(mesh.shader);
+        //     glBindVertexArray(md->VAO);
+        //     mat4 proj;
+        //     _blxGetCameraProjection(&packet->cam, ORTHOGRAPHIC, proj);
+        //     blxShaderSetMatrix4f(mesh.shader, "projection", proj);
+        //     mat4 modelMatrix;
+        //     _transform_modelMatrix(&packet->ui[i].transform, modelMatrix);
+        //     blxShaderSetMatrix4f(mesh.shader, "model", modelMatrix);
+        //     blxShaderSetMatrix4f(mesh.shader, "view", GLM_MAT4_IDENTITY);
+        //     glDrawElements(GL_TRIANGLES, blxGetListCount(mesh.indices), GL_UNSIGNED_INT, 0);
+        //     glBindVertexArray(0);
+        // }
 }
 
 void OpenGLInitMesh(blxMesh* mesh) {
@@ -186,6 +280,7 @@ GLuint blxGLCreateShader(const char* fragSource, const char* vertSource)
 }
 
 
+//TODO: Use asserts instead of using glgetuniform, or if statements.
 static GLint blxGLGetUniform(GLuint shader, const char* name)
 {
     //TODO: Figure out if this is temporary...

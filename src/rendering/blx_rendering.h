@@ -6,6 +6,18 @@
 #include "rendering/lighting/blx_lightingTypes.h"
 #include "rendering/blx_material.h"
 
+//TODO: Renderer backend/internal file for data types/ functions the user should not be using Such as the MaterialGroup...
+//TODO: Change to BatchGroup or similar name.
+typedef struct MaterialGroup {
+    blxMaterial* material;
+    //TODO: These meshes should be registered by a resource system.
+    //TODO: This should be a hashset instead of a dyamic list.
+    blxMesh* vlist_meshes;
+    void* renderData;
+    vList_blxVertex* vertices;
+    vList_indices* indices;
+}MaterialGroup;
+
 typedef struct
 {
     Camera* cam;
@@ -15,6 +27,7 @@ typedef struct
     unsigned int uiCount;
     blxDirectionalLight directionalLight;
     blxPointLight pointLights[4];
+    struct MaterialGroup* vlist_materialGroups;
 }blxRenderPacket;
 
 typedef enum {
@@ -35,6 +48,7 @@ BLXAPI void blxAddCameraToRender(Camera* cam);
 BLXAPI void blxDraw();
 BLXAPI void blxUpdateMesh(blxMesh* mesh);
 BLXAPI void blxImportMesh(const char* filePath, blxMesh* outMesh);
+BLXAPI void blxMeshUseMaterial(blxMesh* mesh, blxMaterial* mat);
 
-
+void _blxRendererRegisterMaterial(blxMaterial* material);
 
