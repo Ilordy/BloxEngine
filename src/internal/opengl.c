@@ -4,10 +4,18 @@
 #include "core/blx_memory.h"
 //TODO: Add support for index buffers
 
+typedef struct {
+    mat4 model;
+    mat4 view;
+    mat4 projection;
+}transformMatrices;
+
 typedef struct
 {
-    GLuint VAO, VBO, IBO, cmdBuffer;
+    mat4* modelMatrices;
+    GLuint VAO, VBO, IBO, cmdBuffer, ssbo;
 }glMeshData;
+
 
 typedef struct {
     /// @brief Number of indices.
@@ -31,6 +39,9 @@ static GLuint glIndirectBuffer;
 void OpenGLInit()
 {
     glEnable(GL_DEPTH_TEST);
+    //TODO: This should only be enabled in a debug context of opengl.
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     GLint versionMajor;
     glGetIntegerv(GL_MAJOR_VERSION, &versionMajor);
     GLint versionMinor;
@@ -39,7 +50,7 @@ void OpenGLInit()
     BLXINFO("OpenGL Initialized using GL Version: %d.%d", versionMajor, versionMinor);
 }
 
-void blxGLRegisterBatch(MaterialGroup matGroup)
+void blxGLRegisterBatch(MaterialGroup* matGroup)
 {
     glMeshData* data = blxAllocate(sizeof(glMeshData), BLXMEMORY_TAG_RENDERER);
     glGenVertexArrays(1, &data->VAO);
@@ -47,7 +58,9 @@ void blxGLRegisterBatch(MaterialGroup matGroup)
     glGenBuffers(1, &data->cmdBuffer);
     glGenBuffers(1, &data->VBO);
     glGenBuffers(1, &data->IBO);
+    glGenBuffers(1, &data->ssbo);
     glBindBuffer(GL_ARRAY_BUFFER, data->VBO);
+    data->modelMatrices = blxInitList(mat4);
 
     //Vertex positions
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(blxVertex), (void*)0);
@@ -59,7 +72,7 @@ void blxGLRegisterBatch(MaterialGroup matGroup)
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(blxVertex), (void*)offsetof(blxVertex, uv));
     glEnableVertexAttribArray(2);
     glBindVertexArray(0);
-    matGroup.renderData = data;
+    matGroup->renderData = data;
 }
 
 //TODO: Generate draw commands on a different thread.
@@ -85,30 +98,56 @@ static void GenerateDrawCommands(struct MaterialGroup* batch)
     }
 }
 
+// TODO: It should be one draw call per shader not one draw call per material..
 void OpenGLDraw(blxRenderPacket* packet)
 {
     glClearColor(0.322f, 0.322f, 0.332f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    
     for (uint64 i = 0; i < blxGetListCount(packet->vlist_materialGroups); i++)
     {
         MaterialGroup currentBatch = packet->vlist_materialGroups[i];
         glMeshData* batchData = (glMeshData*)currentBatch.renderData;
 
+        //TODO: We should not be buffering data every frame.
         glBindVertexArray(batchData->VAO);
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, batchData->cmdBuffer);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batchData->IBO);
+        glBindBuffer(GL_ARRAY_BUFFER, batchData->VBO);
 
         //Clear the list from the last draw call.
         blxClearList(drawCommands);
         GenerateDrawCommands(&currentBatch);
 
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * blxGetListCount(currentBatch.indices), currentBatch.indices, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(blxVertex) * blxGetListCount(currentBatch.vertices), currentBatch.vertices, GL_DYNAMIC_DRAW);
         glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(glDrawCommand) * blxGetListCount(drawCommands), drawCommands, GL_DYNAMIC_DRAW);
-        glUseProgram(currentBatch.material->shader);
 
-        _blxMaterialSetValues(currentBatch.material);
+        glUseProgram(currentBatch.material->shader);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, batchData->ssbo);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, batchData->ssbo);
+
+        // compute model matrices for each geometry in the batch.
+        for (uint64 i = 0; i < blxGetListCount(currentBatch.geometries); i++)
+        {
+            mat4 model;
+            _transform_modelMatrix(currentBatch.geometries[i].transform, model);
+
+            blxAddPtrToList(batchData->modelMatrices, model);
+        }
+
+        blxShaderSetMatrix4f(currentBatch.material->shader, "projection", packet->cam->projecionMatrix);
+        blxShaderSetMatrix4f(currentBatch.material->shader, "view", packet->cam->viewMatrix);
+
+        //Buffer transform data here.
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(mat4) * blxGetListCount(batchData->modelMatrices), batchData->modelMatrices, GL_DYNAMIC_DRAW);
         
-        glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, (void*)0, blxGetListCount(drawCommands), 0);
+        _blxMaterialSetValues(currentBatch.material);
+
+        glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, (const void*)0, blxGetListCount(drawCommands), 0);
+
+        blxClearList(batchData->modelMatrices);
+
     }
 
     //glMultiDrawElementsIndirect()
@@ -249,6 +288,7 @@ GLuint blxGLCreateShader(const char* fragSource, const char* vertSource)
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragSource, NULL);
     glCompileShader(fragmentShader);
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compiled);
     if (!compiled)
     {
         glGetShaderInfoLog(fragmentShader, sizeof(errorLog), NULL, errorLog);
@@ -263,10 +303,14 @@ GLuint blxGLCreateShader(const char* fragSource, const char* vertSource)
     glLinkProgram(shaderProgram);
     // TODO: ERROR IS HERE ON LINE 91, PLS FIX!
     //Use glGetProgramiv instead of shaderiv.
-    // if (shader_checkError(shaderProgram, GL_LINK_STATUS))
-    // {
-    // 	return -1;
-    // }
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &compiled);
+
+    if (!compiled)
+    {
+        glGetProgramInfoLog(shaderProgram, sizeof(errorLog), NULL, errorLog);
+        BLXERROR("%s", errorLog);
+        return -1;
+    }
 
     // if (useShader)
     // {
@@ -294,32 +338,32 @@ static GLint blxGLGetUniform(GLuint shader, const char* name)
 
 void blxGLSetFloat(GLuint shader, const char* uniformName, GLfloat value)
 {
-    glUniform1f(blxGLGetUniform(shader, uniformName), value);
+    glProgramUniform1f(shader, blxGLGetUniform(shader, uniformName), value);
 }
 
 void blxGLSetInt(GLuint shader, const char* uniformName, GLint value)
 {
-    glUniform1i(blxGLGetUniform(shader, uniformName), value);
+    glProgramUniform1i(shader, blxGLGetUniform(shader, uniformName), value);
 }
 
 void blxGLSetVec4f(GLuint shader, const char* uniformName, vec4 value)
 {
-    glUniform4f(blxGLGetUniform(shader, uniformName), value[0], value[1], value[2], value[3]);
+    glProgramUniform4f(shader, blxGLGetUniform(shader, uniformName), value[0], value[1], value[2], value[3]);
 }
 
 void blxGLSetBool(GLuint shader, const char* uniformName, GLboolean value)
 {
-    glUniform1i(blxGLGetUniform(shader, uniformName), value);
+    glProgramUniform1i(shader, blxGLGetUniform(shader, uniformName), value);
 }
 
 void blxGLSetVec3f(GLuint shader, const char* uniformName, vec3 value)
 {
-    glUniform3f(blxGLGetUniform(shader, uniformName), value[0], value[1], value[2]);
+    glProgramUniform3f(shader, blxGLGetUniform(shader, uniformName), value[0], value[1], value[2]);
 }
 
 void blxGLSetMatrix4f(GLuint shader, const char* uniformName, mat4 value)
 {
-    glUniformMatrix4fv(blxGLGetUniform(shader, uniformName), 1, GL_FALSE, value);
+    glProgramUniformMatrix4fv(shader, blxGLGetUniform(shader, uniformName), 1, GL_FALSE, value);
 }
 #pragma endregion
 

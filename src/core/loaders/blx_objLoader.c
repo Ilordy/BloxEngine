@@ -4,13 +4,12 @@
 #include "utils/blx_hashTable.h"
 #include "utils/blx_fileManagement.h"
 #include "core/blx_string.h"
+#include "cglm/struct/vec2-ext.h"
 //TODO: Move into resource system/ resource loader.
 
 typedef struct {
     unsigned int posIndex, texIndex, normIndex;
 }ObjVertex;
-
-
 
 blxBool VertexKeyCompare(void* a, void* b)
 {
@@ -32,14 +31,92 @@ blxBool VertexKeyCompare(void* a, void* b)
     return BLX_TRUE;
 }
 
-
-static blxBool ExtractMesh(blxMesh* outMesh, blxFile* objFile)
+static blxBool StrKeyCompare(void* a, void* b)
 {
-    //blxInitMesh(outMesh);
-    blxHashTable* table = blxCreateHashTable(blxVertex, unsigned int, VertexKeyCompare);
+    return blxStrCmp((char*)a, (char*)b);
+}
 
-    outMesh->vertices = blxInitList(vList_blxVertex);
-    outMesh->indices = blxInitList(vList_indices);
+// TODO: This should be in the blxString header file.
+static uint64 StrToHash(void* key) {
+    return blxToHash(key, blxStrLen(key));
+}
+
+static blxHashTable* ReadMtlFile(const char* mtlPath)
+{
+    blxFile* mtlFile;
+    if (!blxOpenFile(mtlPath, BLX_FILE_MODE_READ, &mtlFile)) {
+        return NULL;
+    }
+
+    char lineBuffer[512];
+    char* p = &lineBuffer;
+    uint64 lineLength;
+    blxHashTable* matTable = blxCreateHashTableWithHash(const char*, blxMaterial*, StrKeyCompare, StrToHash);
+
+    blxMaterial* mat;
+
+    while (blxFileReadLine(mtlFile, 1024, &p, &lineLength))
+    {
+        //const char* newmtlOffset = blxStrFindSubStr(lineBuffer, "newmtl");
+        char firstChar = lineBuffer[0];
+
+        switch (firstChar)
+        {
+            case 'n': {
+                mat = blxMaterial_CreateDefault();
+                char matName[128];
+
+                //offset by 7 for the newmtl keyword and space.
+                blxStrCpy(matName, lineBuffer + 7);
+
+                blxAddToHashTableAllocA(matTable, matName, mat);
+            }break;
+            case 'K': {
+                char secondChar = lineBuffer[1];
+                switch (secondChar)
+                {
+                    //diffuse color
+                    case 'd': {
+                        vec4s diffuseColor;
+                        char* diffuseStart = lineBuffer + 3;
+
+                        sscanf(diffuseStart, "%f %f %f", &diffuseColor.r, &diffuseColor.g, &diffuseColor.b);
+                        diffuseColor.a = 1;
+
+                        blxMaterial_SetValue(mat, "baseColor", BLX_MAT_PROP_VEC4, &diffuseColor);
+                    }break;
+                }
+            }break;
+        }
+    }
+
+    blxCloseFile(mtlFile);
+    return matTable;
+}
+
+
+void blxImportModelFromObj(blxModel* outModel, const char* objPath)
+{
+    blxFile* objFile;
+    if (!blxOpenFile(objPath, BLX_FILE_MODE_READ, &objFile))
+    {
+        return;
+    }
+
+    blxInitModel(outModel);
+
+    blxAddValueToList(outModel->geometries, (blxRenderableGeometry) { 0 });
+    // Initialize geometry pointer to the first element in the list.
+    // For clarity we are setting it to the address after defrencing the pointer of the first element.
+    blxRenderableGeometry* geoPtr = &outModel->geometries[0];
+    geoPtr->mesh.vertices = blxInitList(vList_blxVertex);
+    geoPtr->mesh.indices = blxInitList(vList_indices);
+    geoPtr->material = NULL;
+    geoPtr->transform = &outModel->transform;
+
+    blxHashTable* table = blxCreateHashTable(blxVertex, unsigned int, VertexKeyCompare);
+    blxHashTable* matTable = NULL;
+
     vec3s* positions = blxInitList(vec3s);
     vec3s* normals = blxInitList(vec3s);
     vec2s* texCoords = blxInitList(vec2s);
@@ -50,11 +127,15 @@ static blxBool ExtractMesh(blxMesh* outMesh, blxFile* objFile)
     while (blxFileReadLine(objFile, 1024, &p, &lineLength))
     {
         char firstChar = lineBuffer[0];
+        BLXDEBUG("%s", lineBuffer);
         switch (firstChar)
         {
             case '#': // Skip Comments
                 continue;
                 break;
+            case 'o': {
+                //TODO: Add support for importing multiple objects under one "empty parent"!
+            }break;
             case 'v':
                 char secondChar = lineBuffer[1];
                 switch (secondChar)
@@ -118,46 +199,46 @@ static blxBool ExtractMesh(blxMesh* outMesh, blxFile* objFile)
                     glm_vec3_copy(normals[v3.normIndex - 1].raw, triangleP3.normal.raw);
 
                     unsigned int vertexIndex;
-                    blxAddValueToList(outMesh->vertices, triangleP1);
-                    // vertexIndex = blxGetListCount(outMesh->vertices) - 1;
-                    // blxAddValueToList(outMesh->indices, vertexIndex);
+                    blxAddValueToList(geoPtr->mesh.vertices, triangleP1);
+                    // vertexIndex = blxGetListCount(geoPtr->mesh.vertices) - 1;
+                    // blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
 
                     if (blxHashTableKeyExist(table, &triangleP1, &vertexIndex)) {
                         printf("HASH VALUE VERTEX INDEX!!!: %d\n", vertexIndex);
-                        blxAddValueToList(outMesh->indices, vertexIndex);
+                        blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
                     }
                     else {
-                        vertexIndex = blxGetListCount(outMesh->vertices) - 1;
+                        vertexIndex = blxGetListCount(geoPtr->mesh.vertices) - 1;
                         blxAddToHashTableAlloc(table, triangleP1, vertexIndex);
-                        blxAddValueToList(outMesh->indices, vertexIndex);
+                        blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
                     }
 
-                    blxAddValueToList(outMesh->vertices, triangleP2);
-                    // vertexIndex = blxGetListCount(outMesh->vertices) - 1;
-                    // blxAddValueToList(outMesh->indices, vertexIndex);
+                    blxAddValueToList(geoPtr->mesh.vertices, triangleP2);
+                    // vertexIndex = blxGetListCount(geoPtr->mesh.vertices) - 1;
+                    // blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
 
                     if (blxHashTableKeyExist(table, &triangleP2, &vertexIndex)) {
                         printf("HASH VALUE VERTEX INDEX!!!: %d\n", vertexIndex);
-                        blxAddValueToList(outMesh->indices, vertexIndex);
+                        blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
                     }
                     else {
-                        vertexIndex = blxGetListCount(outMesh->vertices) - 1;
+                        vertexIndex = blxGetListCount(geoPtr->mesh.vertices) - 1;
                         blxAddToHashTableAlloc(table, triangleP2, vertexIndex);
-                        blxAddValueToList(outMesh->indices, vertexIndex);
+                        blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
                     }
 
-                    blxAddValueToList(outMesh->vertices, triangleP3);
-                    // vertexIndex = blxGetListCount(outMesh->vertices) - 1;
-                    // blxAddValueToList(outMesh->indices, vertexIndex);
+                    blxAddValueToList(geoPtr->mesh.vertices, triangleP3);
+                    // vertexIndex = blxGetListCount(geoPtr->mesh.vertices) - 1;
+                    // blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
 
                     if (blxHashTableKeyExist(table, &triangleP3, &vertexIndex)) {
                         printf("HASH VALUE VERTEX INDEX!!!: %d\n", vertexIndex);
-                        blxAddValueToList(outMesh->indices, vertexIndex);
+                        blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
                     }
                     else {
-                        vertexIndex = blxGetListCount(outMesh->vertices) - 1;
+                        vertexIndex = blxGetListCount(geoPtr->mesh.vertices) - 1;
                         blxAddToHashTableAlloc(table, triangleP3, vertexIndex);
-                        blxAddValueToList(outMesh->indices, vertexIndex);
+                        blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
                     }
 
                     for (size_t i = 0; i < 3; i++)
@@ -214,66 +295,139 @@ static blxBool ExtractMesh(blxMesh* outMesh, blxFile* objFile)
                     glm_vec2_copy(texCoords[v4.texIndex - 1].raw, quadP4.uv.raw);
                     glm_vec3_copy(normals[v4.normIndex - 1].raw, quadP4.normal.raw);
 
-                    unsigned int vertexIndex = blxGetListCount(outMesh->vertices);
+                    unsigned int vertexIndex = blxGetListCount(geoPtr->mesh.vertices);
 
                     //First Triangle ---------------
-                    blxAddValueToList(outMesh->vertices, quadP1);
-                    blxAddValueToList(outMesh->indices, vertexIndex);
+                    blxAddValueToList(geoPtr->mesh.vertices, quadP1);
+                    blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
 
                     vertexIndex++;
-                    blxAddValueToList(outMesh->vertices, quadP2);
-                    blxAddValueToList(outMesh->indices, vertexIndex);
+                    blxAddValueToList(geoPtr->mesh.vertices, quadP2);
+                    blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
 
                     vertexIndex++;
-                    blxAddValueToList(outMesh->vertices, quadP3);
-                    blxAddValueToList(outMesh->indices, vertexIndex);
+                    blxAddValueToList(geoPtr->mesh.vertices, quadP3);
+                    blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
                     //-----------
 
                     //Second Triangle -------------
-                    //blxAddValueToList(outMesh->vertices, quadP1);
-                    blxAddValueToList(outMesh->indices, vertexIndex - 2);
+                    //blxAddValueToList(geoPtr->mesh.vertices, quadP1);
+                    blxAddValueToList(geoPtr->mesh.indices, vertexIndex - 2);
 
-                    //blxAddValueToList(outMesh->vertices, quadP3);
-                    blxAddValueToList(outMesh->indices, vertexIndex);
+                    //blxAddValueToList(geoPtr->mesh.vertices, quadP3);
+                    blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
                     vertexIndex++;
-                    blxAddValueToList(outMesh->vertices, quadP4);
-                    blxAddValueToList(outMesh->indices, vertexIndex);
+                    blxAddValueToList(geoPtr->mesh.vertices, quadP4);
+                    blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
                    // vertexIndex++;
-                   // blxAddValueToList(outMesh->indices, vertexIndex);
-                   //-----------
+                   // blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
+                   //--------
+
                 }
+
+                //Keep track of the current file position.
+                // filePos = blxFileGetPos(objFile);
+                // int length = strlen(lineBuffer);
+                // if (blxFileReadLine(objFile, 1024, &p, &lineLength))
+                // {
+                //     firstChar = lineBuffer[0];
+                //     if (firstChar != 'f')
+                //     {
+                //         //Set file position back to the last line read.
+                //         BLXDEBUG("%s", lineBuffer);
+                //         blxFileSetPos(objFile, &filePos);
+                //         blxFileReadLine(objFile, 1024, &p, &lineLength);
+                //         BLXDEBUG("%s", lineBuffer);
+
+                //     }
+                // }
+                // else
+                // {
+                //     break;
+                // }
 
             } break;
 
-
             case 'u': {
-                
+
+                //TODO: Verify if we need this check.
                 if (lineLength > 6)
                 {
-                    const char* firstWord;
-                    blxStrnCpy(firstWord, lineBuffer, 6);
-                    if(blxStrCmp(firstWord, "usemtl")){
-                        //Grab material here!
+
+                    // if (geoPtr->material != NULL)
+                    // {
+                    //     blxAddValueToList(outModel->geometries, geometry);
+                    //     geoPtr->mesh.vertices = blxInitList(vList_blxVertex);
+                    //     geoPtr->mesh.indices = blxInitList(vList_indices);
+                    // }
+
+                    //allocate 7 bytes to include the null terminator.
+                    char mtlTok[7];
+                    blxStrnCpy(mtlTok, lineBuffer, 6);
+                    if (blxStrCmp(mtlTok, "usemtl")) {
+
+                        // The first geometry will not have a material till after the second iteration.
+                        if (geoPtr->material != NULL)
+                        {
+                            blxAddValueToList(outModel->geometries, (blxRenderableGeometry) { 0 });
+                            geoPtr = &outModel->geometries[blxGetListCount(outModel->geometries) - 1];
+                            geoPtr->mesh.vertices = blxInitList(vList_blxVertex);
+                            geoPtr->mesh.indices = blxInitList(vList_indices);
+                            geoPtr->transform = &outModel->transform;
+                        }
+
                         //Assuming mat name is less than 64..
                         char matName[65];
-                        blxStrCpy(matName, lineBuffer[7]);
-                        //TODO: Assign material name!
-                        blxMaterial* mat = blxMaterial_CreateDefault();
-                        
-                        break;
+                        blxStrCpy(matName, lineBuffer + 7);
+
+                        blxMaterial* mat;
+                        if (matTable && blxHashTableKeyExist(matTable, matName, &mat)) {
+                            geoPtr->material = mat;
+                        }
+                        else {
+                            BLXWARNING("Material %s not found in material table.", matName);
+                            geoPtr->material = blxMaterial_CreateDefault();
+                        }
                     }
                 }
-                
-        
+            }break;
+
+            //Assuming this is a mttlib
+            case 'm': {
+                //Assume the mttlib is in the same path as the obj.
+                int periodIndex = blxStrIndexOfLastChar(objPath, '.');
+                char mtlFileName[blxMaxFilePath];
+                blxStrCpy(mtlFileName, objPath);
+
+                mtlFileName[periodIndex + 1] = 'm';
+                mtlFileName[periodIndex + 2] = 't';
+                mtlFileName[periodIndex + 3] = 'l';
+
+                matTable = ReadMtlFile(mtlFileName);
+                if (!matTable)
+                {
+                    BLXWARNING("Material file not found for obj %s\n Using default material.", objPath);
+                }
+
             }break;
         }
     }
 
-    blxFreeHashTable(table);
-}
+    // If no material file was found that means there's only one piece of geometry in the obj file.
+    // Set the only geometry's material to the default material.
+    if (!matTable)
+    {
+        geoPtr->material = blxMaterial_CreateDefault();
+    }
 
-void blxImportModelFromObj(blxModel* outModel, const char* objPath)
-{
-    blxInitModel(outModel);
-    //ExtractMesh()
+
+    // //If matTable is not null and there is 0 geometries then 
+    // //there is only one material in the material table and we add the geometry to the list as it has not been added.
+    // else if (blxGetListCount(outModel->geometries) == 0)
+    // {
+    //     blxAddValueToList(outModel->geometries, geometry);
+    // }
+
+    //TODO FREE MEMORY!
+    blxCloseFile(objFile);
 }

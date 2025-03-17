@@ -8,6 +8,7 @@
 
 //TODO: Renderer backend/internal file for data types/ functions the user should not be using Such as the MaterialGroup...
 //TODO: Change to BatchGroup or similar name.
+// TODO: Only blxRenderableGeometry* is needed not really verts or indices.
 typedef struct MaterialGroup {
     blxMaterial* material;
     //TODO: These meshes should be registered by a resource system.
@@ -16,6 +17,7 @@ typedef struct MaterialGroup {
     void* renderData;
     vList_blxVertex* vertices;
     vList_indices* indices;
+    blxRenderableGeometry* geometries;
 }MaterialGroup;
 
 typedef struct

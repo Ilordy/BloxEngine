@@ -3,4 +3,4 @@
 #include "rendering/blx_model.h"
 
 //TODO: Temp for now till resource system is made.
-BLXAPI void blxImportModelFromObj(blxModel* outModel);
+BLXAPI void blxImportModelFromObj(blxModel* outModel, const char* objPath);

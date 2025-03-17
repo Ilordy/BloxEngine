@@ -2,10 +2,8 @@
 
 void blxInitModel(blxModel* model)
 {
-    //blxInitMesh(&model->mesh);
     transform_init(&model->transform);
-    model->meshes = blxInitList(blxMesh);
-    model->materials = blxInitList(blxMaterial*);
+    model->geometries = blxInitList(blxRenderableGeometry);
 }
 
 void blxSetModelMesh(blxModel* model, blxMesh* mesh)

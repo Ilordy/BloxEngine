@@ -12,11 +12,15 @@ typedef blxMaterial** list_blxMaterialPtrs;
 
 typedef struct {
     Transform transform;
-    list_blxMaterialPtrs materials;
-    //TODO: this should most likely be a list of pointers to meshes...
-    list_blxMesh meshes;
-     /// @brief material and mesh array count (they share the same count).
-    unsigned int mCount;
+    // list_blxMaterialPtrs materials;
+    // //TODO: this should most likely be a list of pointers to meshes...
+    // list_blxMesh meshes;
+    //  /// @brief material and mesh array count (they share the same count).
+    // unsigned int mCount;
+
+    /// @brief List of geometries this model holds that needs to be rendered.
+    blxRenderableGeometry* geometries;
+    //TODO: In the future, this should be a list of child objects that have their own geometry data for obj file support!
 }blxModel;
 
 

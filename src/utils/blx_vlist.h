@@ -6,11 +6,19 @@
 #define BLX_GROWTH_FACTOR 2
 
 ///Copies a value to the list.
-#define blxAddValueToList(list, value) \
-    {\
+#define blxAddValueToList(list, value)\
+{\
         typeof(value) temp = value;\
         list = _blxAddToList(list, &temp);\
-    }
+}
+
+///Adds a pointer to the list.
+///Use this for lists with pointer types.
+#define blxAddPtrToList(list, value)\
+{\
+    list = _blxAddToList(list, value);\
+}
+
 #define blxAddArrayToList(list, array, arrayCount)\
 {\
     for (uint64 i = 0; i < arrayCount; i++)\

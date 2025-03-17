@@ -36,13 +36,6 @@ static const char* const materialKeyWords[] = {
     MAT_KEY(vec3)
 };
 
-typedef enum {
-    BLX_MAT_PROP_INT,
-    BLX_MAT_PROP_FLOAT,
-    BLX_MAT_PROP_VEC3,
-    BLX_MAT_PROP_VEC4
-}blxMaterialPropertyType;
-
 typedef struct
 {
     const char propertyName[128];
@@ -150,8 +143,8 @@ int FindFreeSlot()
 
 blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
 {
-    // TODO: Move to a seperate function.
     blxFile* matFile;
+    system("echo %cd%");
     if (!blxOpenFile(path, BLX_FILE_MODE_READ, &matFile)) {
         return BLX_FALSE;
     }
@@ -162,7 +155,7 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
     char buffer[512];
     char* p = &buffer;
     uint64 lineLength;
-    Shader matShader = 0;
+    Shader matShader = -1;
     char vertPath[blxMaxFilePath] = BLX_EMPTY_STRING;
     char fragPath[blxMaxFilePath] = BLX_EMPTY_STRING;
 
@@ -183,7 +176,7 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
                 blxStrnCpy(vertBuffer, buffer, blxStrLen(MAT_KEY_VERT));
                 if (blxStrCmp(vertBuffer, MAT_KEY_VERT))
                 {
-                    int equalsIndex = blxStrIndexOf(buffer, '=');
+                    int equalsIndex = blxStrIndexOfChar(buffer, '=');
                     if (equalsIndex == -1) {
                         BLXERROR("Invalid format for vert path given, should be %s = \"path/to/vertfile.vert\"", MAT_KEY_VERT);
                         return BLX_FALSE;
@@ -211,7 +204,7 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
                 blxStrnCpy(fragBuffer, buffer, blxStrLen(MAT_KEY_FRAG));
                 if (blxStrCmp(fragBuffer, MAT_KEY_FRAG))
                 {
-                    int equalsIndex = blxStrIndexOf(buffer, '=');
+                    int equalsIndex = blxStrIndexOfChar(buffer, '=');
                     if (equalsIndex == -1) {
                         // TODO: Reformat this to have the vert be directily from materialKeyWords array printed.
                         BLXERROR("Invalid format for frag path given, should be frag = \"path/to/fragfile.frag\"");
@@ -260,7 +253,7 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
                     continue;
                 }
 
-                int equalsIndex = blxStrIndexOf(buffer, '=');
+                int equalsIndex = blxStrIndexOfChar(buffer, '=');
                 if (equalsIndex == -1) {
                     BLXWARNING("Invalid Variable Uniform format given should be [VarType] varName = varValue");
                     continue;
@@ -269,7 +262,7 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
                 //TODO: Refactor later.
                 //Get Uniform name.
                 char uniformName[128];
-                int startIndex = blxStrIndexOf(buffer, ']') + 1;
+                int startIndex = blxStrIndexOfChar(buffer, ']') + 1;
                 blxStrnCpy(uniformName, buffer + startIndex, equalsIndex - startIndex);
 
                 switch (variableCase)
@@ -322,17 +315,20 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
         }
 
         //TODO: Our shader system/Resource System should keep track of what shaders are loaded.
-        if (!matShader && !blxStrNullOrEmpty(fragPath) && !blxStrNullOrEmpty(vertPath))
+        if (matShader == -1 && !blxStrNullOrEmpty(fragPath) && !blxStrNullOrEmpty(vertPath))
         {
             matShader = blxShaderCreate(fragPath, vertPath, BLX_FALSE);
             blxShaderUseShader(matShader);
+            BLXDEBUG("Shader has been created! for shader value is: %i", matShader);
+            mat->shader = matShader;
         }
     }
 
+    blxCloseFile(matFile);
     return BLX_TRUE;
 }
 
-//TODO: This should be the new way of making materials.
+
 blxMaterial* blxMaterial_CreateDefault()
 {
     blxMaterial* mat = blxAllocate(sizeof(blxMaterial) + sizeof(MaterialData) +
@@ -342,15 +338,51 @@ blxMaterial* blxMaterial_CreateDefault()
     MaterialData* matData = (MaterialData*)mat->_internalData;
 
     matData->path = (char*)mat + sizeof(blxMaterial) + sizeof(MaterialData);
+
     //TODO: This is not neccessrary, refactor is needed!
-    matData->path = "res/materials/Standard.bmt";
-    materialCount++;;
+    
+    matData->path = "builtin/materials/Standard.bmt";
+    materialCount++;
     matData->index = FindFreeSlot();
     loadedMaterials[matData->index] = mat;
     matData->referenceCount = 1;
     _blxRendererRegisterMaterial(mat);
     LoadAndParseBmtFile(matData->path, mat);
     return mat;
+}
+
+void blxMaterial_SetValue(blxMaterial* mat, const char* propName, blxMaterialPropertyType propType, void* propValue)
+{
+    MaterialData* matData = (MaterialData*)mat->_internalData;
+    
+    blxMaterialProperty* prop;
+    //TODO: This should be done with a hashtable, swap the properties list with a hashtable..
+    for (uint64 i = 0; i < blxGetListCount(matData->properties); i++)
+    {
+        if (blxStrCmp(propName, matData->properties[i].propertyName))
+        {
+            prop = (blxMaterialProperty*)(&matData->properties[i]);
+        }
+    }
+    
+    switch (propType)
+    {
+        case BLX_MAT_PROP_INT:
+            prop->intValue = *((int*)propValue);
+            break;
+
+        case BLX_MAT_PROP_FLOAT:
+            prop->floatValue = *((float*)propValue);
+            break;
+
+        case BLX_MAT_PROP_VEC3:
+            prop->vec3Value = *((vec3s*)propValue);
+            break;
+
+        case BLX_MAT_PROP_VEC4:
+            prop->vec4Value = *((vec4s*)propValue);
+            break;
+    }
 }
 
 //TODO: Change to just create material, keep an arena ready.

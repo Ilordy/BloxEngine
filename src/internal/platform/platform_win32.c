@@ -22,13 +22,14 @@ static LARGE_INTEGER startTime;
 
 LRESULT CALLBACK WindowMsgProcess(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+//TODO: Add support for making a debug context from opengl..
 static blxBool CreateRenderingContext(GraphicsAPI graphicsAPI, HWND hWnd)
 {
     switch (graphicsAPI)
     {
         case OPENGL:
-            //Setting GL version to 4.3 using core profile.
-            GLint attribs[] = { WGL_CONTEXT_MAJOR_VERSION_ARB, 4,  WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+            //Setting GL version to 4.6 using core profile.
+            GLint attribs[] = { WGL_CONTEXT_MAJOR_VERSION_ARB, 4,  WGL_CONTEXT_MINOR_VERSION_ARB, 6,
              WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB, 0 };
             PIXELFORMATDESCRIPTOR pfd =
             {
@@ -322,7 +323,7 @@ blxBool PlatformOpenFilePanel(const char* title, const char* defDirectory, const
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = defDirectory;
     ofn.lpstrTitle = title;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
     if (GetOpenFileName(&ofn)) {
         return BLX_TRUE;

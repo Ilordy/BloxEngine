@@ -6,6 +6,7 @@
 #include "utils/blx_assertions.h"
 #include "core/blx_memory.h"
 
+
 blxBool blxOpenFilePanel(const char* title, const char* defDirectory, const char* extension, char* buffer)
 {
     return PlatformOpenFilePanel(title, defDirectory, extension, buffer);
@@ -31,7 +32,7 @@ blxBool blxOpenFile(const char* path, blxFileMode fileMode, blxFile** outHandle)
     else if ((fileMode & BLX_FILE_MODE_READ) != 0 && (fileMode & BLX_FILE_MODE_WRITE) == 0) {
         fileModeStr = "r";
     }
-    else if ((fileMode & BLX_FILE_MODE_WRITE != 0) && (fileMode & BLX_FILE_MODE_READ == 0)) {
+    else if ((fileMode & BLX_FILE_MODE_WRITE) != 0 && (fileMode & BLX_FILE_MODE_READ) == 0) {
         fileModeStr = "w";
     }
     else {
@@ -41,7 +42,7 @@ blxBool blxOpenFile(const char* path, blxFileMode fileMode, blxFile** outHandle)
 
     FILE* file = fopen(path, fileModeStr);
     if (!file) {
-        BLXERROR("Error opening file: %s", path);
+        BLXERROR("Error opening file: %s\n Error Reason: %s", path, strerror(errno));
         return BLX_FALSE;
     }
 
@@ -57,6 +58,10 @@ void blxCloseFile(blxFile* file)
     }
 }
 
+
+/// @brief Only works when reading file in binary mode.
+/// @param handle 
+/// @return 
 uint64 blxFileGetSize(blxFile* handle)
 {
     BLXASSERT(handle != NULL);
@@ -90,4 +95,31 @@ blxBool blxFileReadLine(blxFile* handle, uint64 maxLength, char** lineBuffer, ui
         return BLX_TRUE;
     }
     return BLX_FALSE;
+}
+
+int64 blxFileGetPos(blxFile* file)
+{
+    int64 pos;
+
+    fgetpos((FILE*)file, &pos);
+      //return ftell((FILE*)file);
+    return pos;
+}
+
+//TODO: Assert pos is within file size.
+void blxFileSetPos(blxFile* file, int64* pos)
+{
+    //fseek((FILE*)file, pos, SEEK_SET);
+    fsetpos((FILE*)file, pos);
+}
+
+long blxFileGetPosTest(blxFile* file)
+{
+    return ftell((FILE*)file);
+}
+
+void blxFileSetPosTest(blxFile* file, long offset)
+{
+    fflush(file);
+    fseek(file, offset, SEEK_CUR);
 }

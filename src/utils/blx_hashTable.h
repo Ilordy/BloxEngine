@@ -2,6 +2,7 @@
 #include "core/blx_defines.h"
 #include "blx_linkedList.h"
 #include "core/blx_logger.h"
+#include "core/blx_memory.h"
 
 #include <vcruntime_string.h>
 
@@ -46,10 +47,42 @@ static uint64 blxToHash(void* key, uint64 size);
 /// @returns A newly created hash table with given size.
 #define blxCreateHashTableWithSize(keyType, valueType, tableSize, compareFunction) _blxCreateHashTable(sizeof(keyType), sizeof(valueType), tableSize, compareFunction, NULL)
 
+/// @brief Allocates memory to Add a given key value pair to given hash table
+/// @brief Does not support literals (Use this function for static arrays).
+/// @param table The table to add our key value pair to.
+/// @param key The key to add.
+/// @param value The value to add.
+#define blxAddToHashTableAllocA(table, keyToAdd, valueToAdd)\
+{\
+    blxLinkedNode* target = _blxLinkedNodeFromHashKey(table, &keyToAdd);\
+    typeof(keyToAdd)* keyPtr = (typeof(keyToAdd)*)malloc(sizeof(keyToAdd));\
+    blxMemCpy(keyPtr, &keyToAdd, sizeof(keyToAdd));\
+    typeof(valueToAdd)* valuePtr = (typeof(valueToAdd)*)malloc(sizeof(valueToAdd));\
+    blxMemCpy(valuePtr, &valueToAdd, sizeof(valueToAdd));\
+    if(target)\
+    {\
+        blxHashTableEntry* entry = (blxHashTableEntry*)target->value;\
+        if(!entry->inUse)\
+        {\
+            entry->key = keyPtr;\
+            entry->value = valuePtr;\
+            entry->inUse = BLX_TRUE;\
+        }\
+        else\
+        {\
+            BLXWARNING("Hash Table Key already exist!\n");\
+        }\
+    }\
+    else\
+    {\
+        blxAddToHashTable(table, keyPtr, valuePtr);\
+    }\
+}\
+
 /// @brief Allocates memory to Add a given key value pair to given hash table.
 /// @param table The table to add our key value pair to.
 /// @param key The key to add (Can be a literal).
-///@param value The value to add (Can be a literal).
+/// @param value The value to add (Can be a literal).
 #define blxAddToHashTableAlloc(table, keyToAdd, valueToAdd)\
 {\
     typeof(keyToAdd) keyTarget = keyToAdd;\

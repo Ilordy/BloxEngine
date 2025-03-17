@@ -55,7 +55,7 @@ blxBool blxCreateApplication(blxGameInstance* gameInstance)
     //Causing issues, we must create a rendering context before as well.
     //blxInitRenderer(config->graphicAPI);
     initialized = BLX_TRUE;
-
+   
     return BLX_TRUE;
 }
 

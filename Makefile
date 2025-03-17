@@ -40,6 +40,7 @@ scaffold:
 	@xcopy Dependencies\GLFW\include\GLFW $(INCLUDES_DIR)\GLFW /s /e /i /q /y
 	@xcopy Dependencies\GLEW\include\GL $(INCLUDES_DIR)\GL /s /e /i /q /y
 	@xcopy Dependencies\CGLM\include\cglm $(INCLUDES_DIR)\cglm /s /e /i /q /y
+	@xcopy builtin $(BUILD_DIR)\builtin /s /e /i /q /y
 	@xcopy "src\*.h" $(INCLUDES_DIR)\BLX /s /e /i /q /y 
 	@rmdir /s /q "$(INCLUDES_DIR)\BLX\internal
 	@echo Done.

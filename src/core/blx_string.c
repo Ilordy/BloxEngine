@@ -41,7 +41,12 @@ char* blxStrTrim(char* str)
     return str;
 }
 
-int blxStrIndexOf(const char* str, char ch)
+const char* blxStrFindSubStr(const char* str, const char* subStr)
+{
+    return strstr(str, subStr);
+}
+
+int blxStrIndexOfChar(const char* str, char ch)
 {
     char* pch = strchr(str, ch);
 
@@ -53,4 +58,29 @@ int blxStrIndexOf(const char* str, char ch)
     }
 
 }
+
+int blxStrIndexOfSubStr(const char* src, const char* subStr)
+{
+    const char* str = blxStrFindSubStr(src, subStr);
+
+    if (str) {
+        return str - src;
+    }
+    else {
+        return -1;
+    }
+}
+
+int blxStrIndexOfLastChar(const char* src, const char ch)
+{
+    char* pch = strrchr(src, ch);
+
+    if (pch) {
+        return pch - src;
+    }
+    else {
+        return -1;
+    }
+}
+
 

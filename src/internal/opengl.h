@@ -15,5 +15,5 @@ void blxGLSetVec4f(GLuint shader, const char* uniformName, vec4 value);
 void blxGLSetBool(GLuint shader, const char* uniformName, GLboolean value);
 void blxGLSetVec3f(GLuint shader, const char* uniformName, vec3 value);
 void blxGLSetMatrix4f(GLuint shader, const char* uniformName, mat4 value);
-void blxGLRegisterBatch(MaterialGroup matGroup);
+void blxGLRegisterBatch(MaterialGroup* matGroup);
 GLuint blxGLCreateShader(const char* fragSource, const char* vertSource);

@@ -12,6 +12,7 @@
 #define PRINTVEC2S(vec) printf("(%f, %f)\n", vec.x, vec.y)
 typedef unsigned char blxBool;
 typedef unsigned long long uint64;
+typedef long long int64;
 
 #ifdef BLXEXPORT
 #ifdef _MSC_VER

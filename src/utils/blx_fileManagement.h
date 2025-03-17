@@ -3,6 +3,7 @@
 
 //THIS HEADER FILE IS SUBJECT TO BEING NAME CHANGED WHEN I FIND MORE USEFUL STUFF TO DO HERE.
 
+/// @brief File modes for opening files (flags).
 typedef enum {
     BLX_FILE_MODE_READ = 0x1,
     BLX_FILE_MODE_WRITE = 0x2,
@@ -39,6 +40,16 @@ BLXAPI blxBool blxFileExists(const char* path);
 BLXAPI blxBool blxOpenFile(const char* path, blxFileMode fileMode, blxFile** outHandle);
 
 BLXAPI blxBool blxFileReadLine(blxFile* handle, uint64 maxLength, char** lineBuffer, uint64* outLineLength);
+
+BLXAPI int64 blxFileGetPos(blxFile* file);
+
+BLXAPI void blxFileSetPos(blxFile* file, int64* pos);
+
+BLXAPI void blxCloseFile(blxFile* file);
+
+BLXAPI long blxFileGetPosTest(blxFile* file);
+
+BLXAPI void blxFileSetPosTest(blxFile* file, long offset);
 
 
 
