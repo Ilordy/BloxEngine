@@ -374,6 +374,9 @@ void blxImportModelFromObj(blxModel* outModel, const char* objPath)
                             geoPtr->mesh.vertices = blxInitList(vList_blxVertex);
                             geoPtr->mesh.indices = blxInitList(vList_indices);
                             geoPtr->transform = &outModel->transform;
+                            //TODO: Instead of freeing we should just reuse the memory again. maybe with an arena...
+                            blxFreeHashTable(table);
+                            table = blxCreateHashTable(blxVertex, unsigned int, VertexKeyCompare);
                         }
 
                         //Assuming mat name is less than 64..
