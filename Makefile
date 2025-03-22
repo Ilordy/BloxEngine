@@ -37,18 +37,19 @@ scaffold:
 	@echo Scaffolding folder structure...
 	-@setlocal enableextensions enabledelayedexpansion && mkdir $(addprefix $(OBJ_DIR), $(DIRECTORIES)) 2>NUL || cd .
 	-@setlocal enableextensions enabledelayedexpansion && mkdir $(OBJ_DIR)\src 2>NUL || cd .
-	@xcopy Dependencies\GLFW\include\GLFW $(INCLUDES_DIR)\GLFW /s /e /i /q /y
-	@xcopy Dependencies\GLEW\include\GL $(INCLUDES_DIR)\GL /s /e /i /q /y
-	@xcopy Dependencies\CGLM\include\cglm $(INCLUDES_DIR)\cglm /s /e /i /q /y
-	@xcopy builtin $(BUILD_DIR)\builtin /s /e /i /q /y
-	@xcopy "src\*.h" $(INCLUDES_DIR)\BLX /s /e /i /q /y 
+	@xcopy Dependencies\GLFW\include\GLFW $(INCLUDES_DIR)\GLFW /s /e /i /q /y /d
+	@xcopy Dependencies\GLEW\include\GL $(INCLUDES_DIR)\GL /s /e /i /q /y /d
+	@xcopy Dependencies\CGLM\include\cglm $(INCLUDES_DIR)\cglm /s /e /i /q /y /d
+	@xcopy builtin $(BUILD_DIR)\builtin /s /e /i /q /y /d
+	@xcopy "src\*.h" $(INCLUDES_DIR)\BLX /s /e /i /q /y /d
 	@rmdir /s /q "$(INCLUDES_DIR)\BLX\internal
 	@echo Done.
 
 .PHONY: link
 link: scaffold $(OBJ_FILES)
 	@echo Linking $(ASSEMBLY)...
-	$(CC) $(OBJ_FILES) -o $(BUILD_DIR)\$(ASSEMBLY)$(EXTENSION) $(LINKER_FLAGS)
+	@$(CC) $(OBJ_FILES) -o $(BUILD_DIR)\$(ASSEMBLY)$(EXTENSION) $(LINKER_FLAGS)
+	@echo Build Finished.
 	
 .PHONY: compile
 compile:
@@ -61,6 +62,6 @@ clean:
 	@echo Done Cleaing.
 	
 $(OBJ_DIR)/%.c.o: %.c
-	@echo	$<...
+	@echo $<...
 	$(CC) $< $(CFLAGS) -c -o $@ $(DEFINES) $(INCLUDE_FLAGS)
 	
