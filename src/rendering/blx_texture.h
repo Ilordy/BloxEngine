@@ -2,6 +2,8 @@
 #include "core/blx_defines.h"
 #include "GL/glew.h"
 
+// TODO: Wrap out openGL specific code.
+
 // Might want to have an active slot that texture uses and can be switched.
 // In the future we can have a dictionary array for setting up gl settings
 // params.

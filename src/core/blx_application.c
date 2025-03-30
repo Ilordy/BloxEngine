@@ -38,7 +38,7 @@ blxBool blxCreateApplication(blxGameInstance* gameInstance)
     app.isSuspended = BLX_FALSE;
 
 
-    if (!PlatformInit(&app.platform,
+    if (!blxPlatform_Init(&app.platform,
         gameInstance->config.name, gameInstance->config.width,
         gameInstance->config.height, gameInstance->config.graphicAPI)) {
         BLXERROR("Platform failed to initialize!");
@@ -71,7 +71,7 @@ blxBool blxRunApplication()
     //Game Loop
     while (app.isRunning)
     {
-        if (!PlatformPumpMessages(&app.platform)) {
+        if (!blxPlatform_PumpMessages(&app.platform)) {
             app.isRunning = BLX_FALSE;
         }
 
@@ -79,7 +79,7 @@ blxBool blxRunApplication()
             blxUpdateClock(&app.clock);
             double currentTime = app.clock.elaspedTime;
             double delta = currentTime - app.lastTime;
-            double frameStartTime = PlatformGetTime();
+            double frameStartTime = blxPlatform_GetTime();
 
             if (!app.gameInstance->Update(delta)) {
                 BLXERROR("Game Update failed!");
@@ -94,9 +94,9 @@ blxBool blxRunApplication()
             }
 
             blxDraw();
-            PlatformSwapBuffers();
+            blxPlatform_SwapBuffers();
 
-            double frameEndTime = PlatformGetTime();
+            double frameEndTime = blxPlatform_GetTime();
             double frameElapsedTime = frameEndTime - frameStartTime;
             runningTime += frameElapsedTime;
             double remainingSeconds = targetFrameSeconds - frameElapsedTime;
@@ -108,7 +108,7 @@ blxBool blxRunApplication()
                 blxBool limitFrames = BLX_FALSE;
                 if (remainingMs > 0 && limitFrames)
                 {
-                    PlatformSleep(remainingMs - 1);
+                    blxPlatform_Sleep(remainingMs - 1);
                 }
 
 
@@ -122,7 +122,7 @@ blxBool blxRunApplication()
 
     }
     app.isRunning = BLX_FALSE;
-    PlatformShutDown(&app.platform);
+    blxPlatform_ShutDown(&app.platform);
     _blxShutDownInputSystem();
     return BLX_TRUE;
 }

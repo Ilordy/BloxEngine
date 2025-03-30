@@ -49,6 +49,6 @@ typedef struct
     blxMaterial* material;
 
      /// @brief Transform to apply to the geometry.
-    Transform* transform;
+    blxTransform* transform;
 }blxRenderableGeometry;
 

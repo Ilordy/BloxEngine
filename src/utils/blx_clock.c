@@ -4,13 +4,13 @@
 void blxUpdateClock(blxClock* clock)
 {
     if (clock->startTime != 0) {
-        clock->elaspedTime = PlatformGetTime() - clock->startTime;
+        clock->elaspedTime = blxPlatform_GetTime() - clock->startTime;
     }
 }
 
 void blxStartClock(blxClock* clock)
 {
-    clock->startTime = PlatformGetTime();
+    clock->startTime = blxPlatform_GetTime();
     clock->elaspedTime = 0;
 }
 

@@ -3,8 +3,11 @@
 #include "blx_gameType.h"
 #include "blx_memory.h"
 
+/// @brief Define this function to create the game instance.
+/// @return True if all went well creating the game, false otherwise.
 extern blxBool blxCreateGame(blxGameInstance* outGame);
 
+// Entry point for the game.
 int main(void)
 {
     _blxInitMemory();

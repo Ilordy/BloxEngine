@@ -91,19 +91,19 @@ void _blxMaterialSetValues(blxMaterial* mat)
         switch (prop.propertyType)
         {
             case BLX_MAT_PROP_INT:
-                blxShaderSetInt(mat->shader, prop.propertyName, prop.intValue);
+                blxShader_SetInt(mat->shader, prop.propertyName, prop.intValue);
                 break;
 
             case BLX_MAT_PROP_FLOAT:
-                blxShaderSetFloat(mat->shader, prop.propertyName, prop.floatValue);
+                blxShader_SetFloat(mat->shader, prop.propertyName, prop.floatValue);
                 break;
 
             case BLX_MAT_PROP_VEC3:
-                blxShaderSetVec3(mat->shader, prop.propertyName, prop.vec3Value.raw);
+                blxShader_SetVec3(mat->shader, prop.propertyName, prop.vec3Value.raw);
                 break;
 
             case BLX_MAT_PROP_VEC4:
-                blxShaderSetVec4(mat->shader, prop.propertyName, prop.vec4Value.raw);
+                blxShader_SetVec4(mat->shader, prop.propertyName, prop.vec4Value.raw);
                 break;
         }
     }
@@ -114,7 +114,7 @@ void _blxMaterialSetValues(blxMaterial* mat)
 blxBool MaterialExists(blxMaterial* mat)
 {
     MaterialData* matData = (MaterialData*)mat->_internalData;
-    for (unsigned int i = 0; i < materialCount; i++)
+    for (unsigned int i = 0; i < BLX_MAX_MATERIALS; i++)
     {
         if (loadedMaterials[i]->id == mat->id)
         {
@@ -317,8 +317,8 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
         //TODO: Our shader system/Resource System should keep track of what shaders are loaded.
         if (matShader == -1 && !blxStrNullOrEmpty(fragPath) && !blxStrNullOrEmpty(vertPath))
         {
-            matShader = blxShaderCreate(fragPath, vertPath, BLX_FALSE);
-            blxShaderUseShader(matShader);
+            matShader = blxShader_Create(fragPath, vertPath, BLX_FALSE);
+            blxShader_UseShader(matShader);
             BLXDEBUG("Shader has been created! for shader value is: %i", matShader);
             mat->shader = matShader;
         }
@@ -387,7 +387,7 @@ void blxMaterial_SetValue(blxMaterial* mat, const char* propName, blxMaterialPro
 
 //TODO: Change to just create material, keep an arena ready.
 //TODO: No need to use hashtables.
-blxBool blxLoadMaterial(const char* path, blxMaterial** outMat)
+blxBool blxMaterial_Load(const char* path, blxMaterial** outMat)
 {
     // TODO: Memory arena for materials.
 

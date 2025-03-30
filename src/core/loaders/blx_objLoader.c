@@ -103,7 +103,7 @@ void blxImportModelFromObj(blxModel* outModel, const char* objPath)
         return;
     }
 
-    blxInitModel(outModel);
+    blxModel_Init(outModel);
 
     blxAddValueToList(outModel->geometries, (blxRenderableGeometry) { 0 });
     // Initialize geometry pointer to the first element in the list.

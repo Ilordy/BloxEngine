@@ -6,15 +6,10 @@
 #include <stdarg.h>
 #include <time.h>
 
-// //TODO: TEMP FOR NOW TILL PLATFORM LAYER!---------------------
-// #include <Windows.h>
-// #include <winuser.h>
-
 void blxInitalizeLogging()
 {
     //TODO: INIT LOG FILE!
 }
-// //----------------------------
 
 //https://blog.7linternational.com/how-to-create-some-colorful-logs-in-an-application-written-in-c-4bd2fea6f009
 void blxLog(blxLogType logType, const char* message, ...)
@@ -46,22 +41,22 @@ void blxLog(blxLogType logType, const char* message, ...)
     {
         case BLX_INFO_LOG:
             sprintf(finalMsg, "%s[INFO] %s\n\n", time_header, formattedMsg);
-            PlatformWriteToConsole(finalMsg, BLX_INFO_LOG);
+            blxPlatform_WriteToConsole(finalMsg, BLX_INFO_LOG);
             break;
 
         case BLX_WARNING_LOG:
             sprintf(finalMsg, "%s[WARNING] %s\n\n", time_header, formattedMsg);
-            PlatformWriteToConsole(finalMsg, BLX_WARNING_LOG);
+            blxPlatform_WriteToConsole(finalMsg, BLX_WARNING_LOG);
             break;
 
         case BLX_ERROR_LOG:
             sprintf(finalMsg, "%s[ERROR] %s\n\n", time_header, formattedMsg);
-            PlatformWriteToConsole(finalMsg, BLX_ERROR_LOG);
+            blxPlatform_WriteToConsole(finalMsg, BLX_ERROR_LOG);
             break;
 
         case BLX_DEBUG_LOG:
             sprintf(finalMsg, "%s[DEBUG] %s\n\n", time_header, formattedMsg);
-            PlatformWriteToConsole(finalMsg, BLX_DEBUG_LOG);
+            blxPlatform_WriteToConsole(finalMsg, BLX_DEBUG_LOG);
             break;
     }
 }

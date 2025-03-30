@@ -1,8 +1,6 @@
 #pragma once
 #include "core/blx_defines.h"
 
-//THIS HEADER FILE IS SUBJECT TO BEING NAME CHANGED WHEN I FIND MORE USEFUL STUFF TO DO HERE.
-
 /// @brief File modes for opening files (flags).
 typedef enum {
     BLX_FILE_MODE_READ = 0x1,
@@ -10,8 +8,6 @@ typedef enum {
 }blxFileMode;
 
 typedef void blxFile;
-
-//TODO: Move to platform folder, and make platform folder not INTERNAL!
 
 // TODO: Add macros for other platforms.
 #define blxMaxFilePath 0
@@ -33,23 +29,36 @@ BLXAPI blxBool blxOpenFilePanel(const char* title, const char* defDirectory, con
 /// @return A buffer allocated on the heap MUST BE FREED BY USER! (use: blxFree(buffer, BLXMEMORY_TAG_STRING))
 BLXAPI char* blxFileReadAllText(blxFile* handle, uint64* outBufSize);
 
+/// @brief Gets the size of a file (only works when reading file in binary mode.)
+/// @param handle The file handle to get the size of.
+/// @return The size of the file in bytes.
 BLXAPI uint64 blxFileGetSize(blxFile* handle);
 
+/// @brief Checks if a file exists.
+/// @param path The path to the file.
+/// @return True if the file exists, false otherwise.
 BLXAPI blxBool blxFileExists(const char* path);
 
+/// @brief Opens a file.
+/// @param path Path to the file.
+/// @param fileMode Mode to open the file in.
+/// @param outHandle A pointer to the file handle.
+/// @return True if the file was opened successfully, false otherwise.
 BLXAPI blxBool blxOpenFile(const char* path, blxFileMode fileMode, blxFile** outHandle);
 
+/// @brief Reads a line from a file (depending if reading in bytes or text different outcome can happen).
+/// @param handle A handle to the file to read from.
+/// @param maxLength Max length of the line to read or till a newline character is reached if reading text.
+/// @param lineBuffer A pointer to the buffer to store the line in.
+/// @param outLineLength Length of the line read.
+/// @return True if a line was read, false otherwise.
 BLXAPI blxBool blxFileReadLine(blxFile* handle, uint64 maxLength, char** lineBuffer, uint64* outLineLength);
 
-BLXAPI int64 blxFileGetPos(blxFile* file);
-
-BLXAPI void blxFileSetPos(blxFile* file, int64* pos);
-
+/// @brief Closes a file (File will not be able to be interacted with anymore after).
+/// @param file The file to close.
 BLXAPI void blxCloseFile(blxFile* file);
 
-BLXAPI long blxFileGetPosTest(blxFile* file);
 
-BLXAPI void blxFileSetPosTest(blxFile* file, long offset);
 
 
 

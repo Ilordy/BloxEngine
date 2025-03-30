@@ -3,6 +3,8 @@
 #include <stdio.h>
 #define BLX_TRUE 1
 #define BLX_FALSE 0
+
+// TODO: These should be moved to their own math header file.
 #define Vec3_Up (vec3){0.0f, 1.0f, 0.0f}
 #define Vec3_Forward (vec3){0.0f, 0.0f, -1.0f} //Negated due to openGL being a right handed coord system. 
 #define Vec3_Right (vec3){-1.0f, 0.0f, 0.0f} //Negated due to openGL being a right handed coord system. 

@@ -8,6 +8,6 @@ typedef struct {
 }blxDirectionalLight;
 
 typedef struct {
-    Transform transform;
+    blxTransform transform;
     vec3s diffuse;
 }blxPointLight;

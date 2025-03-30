@@ -1,8 +1,8 @@
 #include "blx_model.h"
 
-void blxInitModel(blxModel* model)
+void blxModel_Init(blxModel* model)
 {
-    transform_init(&model->transform);
+    blxTransform_Init(&model->transform);
     model->geometries = blxInitList(blxRenderableGeometry);
 }
 

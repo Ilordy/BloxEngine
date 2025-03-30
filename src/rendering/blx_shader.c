@@ -18,18 +18,18 @@ typedef struct {
 
 ShaderSystem shaderSystem;
 
-void _blxShaderSystemInitialize(GraphicsAPI graphicApi)
+void _blxShader_SystemInitialize(GraphicsAPI graphicApi)
 {
 	switch (graphicApi)
 	{
 		case OPENGL:
-			shaderSystem.SetFloat = blxGLSetFloat;
-			shaderSystem.SetInt = blxGLSetInt;
-			shaderSystem.SetVec4f = blxGLSetVec4f;
-			shaderSystem.SetBool = blxGLSetBool;
-			shaderSystem.SetVec3f = blxGLSetVec3f;
-			shaderSystem.SetMatrix4f = blxGLSetMatrix4f;
-			shaderSystem.CreateShader = blxGLCreateShader;
+			shaderSystem.SetFloat = blxGL_SetFloat;
+			shaderSystem.SetInt = blxGL_SetInt;
+			shaderSystem.SetVec4f = blxGL_SetVec4f;
+			shaderSystem.SetBool = blxGL_SetBool;
+			shaderSystem.SetVec3f = blxGL_SetVec3f;
+			shaderSystem.SetMatrix4f = blxGL_SetMatrix4f;
+			shaderSystem.CreateShader = blxGL_CreateShader;
 			break;
 	}
 }
@@ -79,7 +79,7 @@ char* shader_parse(const char* path)
 	return buffer;
 }
 
-Shader blxShaderCreate(const char* fragPath, const char* vertPath, GLboolean useShader)
+Shader blxShader_Create(const char* fragPath, const char* vertPath, GLboolean useShader)
 {
 	blxFile* fragFile;
 	blxFile* vertFile;
@@ -158,43 +158,43 @@ Shader blxShaderCreate(const char* fragPath, const char* vertPath, GLboolean use
 	// return shaderProgram;
 }
 
-void blxShaderSetBool(Shader shader, const char* name, GLboolean value)
+void blxShader_SetBool(Shader shader, const char* name, GLboolean value)
 {
 	shaderSystem.SetBool(shader, name, value);
 }
 
-void blxShaderSetInt(Shader shader, const char* name, GLint value)
+void blxShader_SetInt(Shader shader, const char* name, GLint value)
 {
 	shaderSystem.SetInt(shader, name, value);
 }
 
-void blxShaderSetFloat(Shader shader, const char* name, GLfloat value)
+void blxShader_SetFloat(Shader shader, const char* name, GLfloat value)
 {
 	shaderSystem.SetFloat(shader, name, value);
 }
 
-void blxShaderSetVec4(Shader shader, const char* name, vec4 value)
+void blxShader_SetVec4(Shader shader, const char* name, vec4 value)
 {
 	shaderSystem.SetVec4f(shader, name, value);
 }
 
-void blxShaderSetMatrix4f(Shader shader, const char* name, mat4 mat)
+void blxShader_SetMatrix4f(Shader shader, const char* name, mat4 mat)
 {
 	shaderSystem.SetMatrix4f(shader, name, mat);
 }
 
-void blxShaderSetVec3(Shader shader, const char* name, vec3 value)
+void blxShader_SetVec3(Shader shader, const char* name, vec3 value)
 {
 	shaderSystem.SetVec3f(shader, name, value);
 }
 
-void blxShaderUseShader(Shader shader)
+void blxShader_UseShader(Shader shader)
 {
 	glUseProgram(shader);
 }
 
-void blxShaderUseTexture(Shader shader, Texture* texture, const char* samplerName)
+void blxShader_UseTexture(Shader shader, Texture* texture, const char* samplerName)
 {
 	texture_setActive(texture);
-	blxShaderSetInt(shader, samplerName, texture->textureSlot);
+	blxShader_SetInt(shader, samplerName, texture->textureSlot);
 }

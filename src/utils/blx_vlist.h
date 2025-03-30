@@ -5,7 +5,7 @@
 ///The factor to multiply our list size by when resizing.
 #define BLX_GROWTH_FACTOR 2
 
-///Copies a value to the list.
+///@brief Copies a value to the list.
 #define blxAddValueToList(list, value)\
 {\
         typeof(value) temp = value;\
@@ -19,6 +19,7 @@
     list = _blxAddToList(list, value);\
 }
 
+///@brief Adds an array of values to the list.
 #define blxAddArrayToList(list, array, arrayCount)\
 {\
     for (uint64 i = 0; i < arrayCount; i++)\

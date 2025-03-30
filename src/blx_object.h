@@ -3,6 +3,6 @@
 #include "core/blx_transform.h"
 
 typedef struct{
-    Transform transform;
+    blxTransform transform;
     
 }blxObject;

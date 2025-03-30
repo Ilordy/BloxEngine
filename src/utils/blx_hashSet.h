@@ -18,5 +18,4 @@ blxBool IntCompare(void* a, void* b)
 static void _blxCreateHashSet()
 {
     blxHashTable* table = blxCreateHashTable(int, void*, IntCompare);
-
 }

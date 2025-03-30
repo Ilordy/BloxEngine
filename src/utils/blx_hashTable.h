@@ -13,6 +13,10 @@
 // TODO: Consider using a blx_vList instead of a linkedlist.
 // TODO: Refactor
 
+/// @brief Hashes a given key. (Not suited for arrays).
+/// @param key The key to hash.
+/// @param size The size of the key.
+/// @return The hashed key.
 static uint64 blxToHash(void* key, uint64 size);
 
 /// @brief Creates a new hash table with the default size and hashing function (default hash does not work with arrays).
@@ -250,8 +254,6 @@ static uint64 blxToHash(void* key, uint64 size)
 
     return hash;
 }
-
-// TODO: Refactor to allow user to not have to use malloc if they do not want to!
 
 static blxHashTable* _blxCreateHashTable(uint64 keySize, uint64 valueSize, uint64 tableSize,
     blxBool(*Compare) (void* a, void* b), uint64(*ToHash)(void* key))

@@ -38,7 +38,7 @@ blxBool InitGame(blxGameInstance* gameInstance)
 
     // state->currentModel.mesh.shader = blxShaderCreate("res/shaders/Standard.frag",
     //     "res/shaders/Standard.vert", BLX_TRUE);
-    camera_init(&state->mainCam, 45);
+    blxCamera_Init(&state->mainCam, 45);
     blxAddCameraToRender(&state->mainCam);
 
     //Temp for now.
@@ -95,19 +95,19 @@ blxBool Render()
 void ProcessMovement(float deltaTime)
 {
     const float moveSpeed = 10 * deltaTime;
-    Transform* camTrans = &state->mainCam.transform;
+    blxTransform* camTrans = &state->mainCam.transform;
 
     if (blxInputGetKey(BLX_KEY_W))
     {
         vec3 forward;
-        transform_forward(camTrans, forward);
+        blxTransform_Forward(camTrans, forward);
         glm_vec3_muladds(forward, moveSpeed, camTrans);
     }
 
     if (blxInputGetKey(BLX_KEY_S))
     {
         vec3 forward;
-        transform_forward(camTrans, forward);
+        blxTransform_Forward(camTrans, forward);
         glm_vec3_negate(forward);
         glm_vec3_muladds(forward, moveSpeed, camTrans);
     }
@@ -115,14 +115,14 @@ void ProcessMovement(float deltaTime)
     if (blxInputGetKey(BLX_KEY_A))
     {
         vec3 right;
-        transform_right(camTrans, right);
+        blxTransform_Right(camTrans, right);
         glm_vec3_muladds(right, moveSpeed, camTrans);
     }
 
     if (blxInputGetKey(BLX_KEY_D))
     {
         vec3 left;
-        transform_right(camTrans, left);
+        blxTransform_Right(camTrans, left);
         glm_vec3_negate(left);
         glm_vec3_muladds(left, moveSpeed, camTrans);
     }

@@ -64,12 +64,12 @@ void blxInitRenderer(GraphicsAPI graphicsToUse)
     switch (graphicsToUse)
     {
         case OPENGL:
-            renderer->Draw = OpenGLDraw;
-            renderer->Init = OpenGLInit;
-            renderer->InitMesh = OpenGLInitMesh;
+            renderer->Draw = blxGL_Draw;
+            renderer->Init = blxGL_Init;
+            renderer->InitMesh = blxGL_InitMesh;
             renderer->UpdateMesh = OpenGLUpdateMesh;
-            renderer->SetShadingMode = OpenGLSetShadingMode;
-            renderer->RegisterBatch = blxGLRegisterBatch;
+            renderer->SetShadingMode = blxGL_SetShadingMode;
+            renderer->RegisterBatch = blxGL_RegisterBatch;
             glEnable(GL_DEBUG_OUTPUT);
             glDebugMessageCallback(GLDebug, 0);
             BLXINFO("Initializing Renderer with OpenGL...");
@@ -125,7 +125,7 @@ void blxInitRenderer(GraphicsAPI graphicsToUse)
     renderer->UpdateMesh(&defaultUIGeometry);
 
 
-    _blxShaderSystemInitialize(graphicsToUse);
+    _blxShader_SystemInitialize(graphicsToUse);
 }
 
 

@@ -1,6 +1,7 @@
 #include "core/blx_defines.h"
 
-typedef enum {
+/// @brief Mouse button inputs.
+typedef enum blxMouseButtonInputs {
     BLX_LMB,
     BLX_RMB,
     BLX_MMB,
@@ -9,7 +10,8 @@ typedef enum {
 
 #define _DEFINE_KEY(name, code) BLX_KEY_##name = code
 
-typedef enum {
+/// @brief Keyboard inputs.
+typedef enum blxKeyBoardInputs {
     _DEFINE_KEY(BACKSPACE, 0x08),
     _DEFINE_KEY(ENTER, 0x0D),
     _DEFINE_KEY(TAB, 0x09),
@@ -145,20 +147,64 @@ typedef enum {
 } blxKeyBoardInputs;
 
 
+/// @brief Checks if specified key is pressed.
+/// @param key The key to check.
+/// @return True if specified key is pressed, false otherwise.
 BLXAPI blxBool blxInputGetKey(blxKeyBoardInputs key);
-BLXAPI blxBool blxInputGetKeyDown(blxKeyBoardInputs button);
+
+/// @brief Checks if specified key was pressed this frame.
+/// @param key The key to check. 
+/// @return True if specified key was pressed this frame, false otherwise.
+BLXAPI blxBool blxInputGetKeyDown(blxKeyBoardInputs key);
+
+/// @brief Checks if specified key was released this frame.
+/// @param key The key to check.
+/// @return True if specified key was released this frame, false otherwise.
 BLXAPI blxBool blxInputGetKeyUp(blxKeyBoardInputs key);
 
+/// @brief Checks if specified key was pressed last frame.
+/// @param key The key to check.
+/// @return True if specified key was pressed last frame, false otherwise.
 BLXAPI blxBool blxInputWasKeyDown(blxKeyBoardInputs key);
+
+/// @brief Checks if specified key was released last frame.
+/// @param key The key to check.
+/// @return True if specified key was released last frame, false otherwise.
 BLXAPI blxBool blxInputWasKeyUp(blxKeyBoardInputs key);
 
+/// @brief Checks if specified mouse button is pressed.
+/// @param button The button to check.
+/// @return True if specified button is pressed, false otherwise.
 BLXAPI blxBool blxInputGetMouseButton(blxMouseButtonInputs button);
+
+/// @brief Checks if the specified mouse button is pressed this frame.
+/// @param button The mouse button to check.
+/// @return True if the specified mouse button is pressed this frame, false otherwise.
 BLXAPI blxBool blxGetMouseButtonDown(blxMouseButtonInputs button);
+
+/// @brief Checks if the specified mouse button is released this frame.
+/// @param button The mouse button to check.
+/// @return True if the specified mouse button is released this frame, false otherwise.
 BLXAPI blxBool blxGetMouseButtonUp(blxMouseButtonInputs button);
+
+/// @brief Checks if the specified mouse button was pressed in the previous frame.
+/// @param button The mouse button to check.
+/// @return True if the specified mouse button was pressed in the previous frame, false otherwise.
 BLXAPI blxBool blxWasMouseButtonDown(blxMouseButtonInputs button);
+
+/// @brief Checks if the specified mouse button was released in the previous frame.
+/// @param button The mouse button to check.
+/// @return True if the specified mouse button was released in the previous frame, false otherwise.
 BLXAPI blxBool blxWasMouseButtonUp(blxMouseButtonInputs button);
 
+/// @brief Retrieves the current mouse position.
+/// @param x Pointer to store the x-coordinate of the mouse position.
+/// @param y Pointer to store the y-coordinate of the mouse position.
 BLXAPI void blxInputGetMousePos(int* x, int* y);
+
+/// @brief Retrieves the mouse position from the previous frame.
+/// @param x Pointer to store the x-coordinate of the previous mouse position.
+/// @param y Pointer to store the y-coordinate of the previous mouse position.
 BLXAPI void blxInputGetPrevMousePos(int* x, int* y);
 
 void _blxInitInputSystem();

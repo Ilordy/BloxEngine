@@ -36,7 +36,7 @@ static vlist_glDrawCommand drawCommands;
 static GLuint glIndirectBuffer;
 //static glDrawCommand* commands;
 
-void OpenGLInit()
+void blxGL_Init()
 {
     glEnable(GL_DEPTH_TEST);
     //TODO: This should only be enabled in a debug context of opengl.
@@ -50,7 +50,7 @@ void OpenGLInit()
     BLXINFO("OpenGL Initialized using GL Version: %d.%d", versionMajor, versionMinor);
 }
 
-void blxGLRegisterBatch(MaterialGroup* matGroup)
+void blxGL_RegisterBatch(MaterialGroup* matGroup)
 {
     glMeshData* data = blxAllocate(sizeof(glMeshData), BLXMEMORY_TAG_RENDERER);
     glGenVertexArrays(1, &data->VAO);
@@ -99,7 +99,7 @@ static void GenerateDrawCommands(struct MaterialGroup* batch)
 }
 
 // TODO: It should be one draw call per shader not one draw call per material..
-void OpenGLDraw(blxRenderPacket* packet)
+void blxGL_Draw(blxRenderPacket* packet)
 {
     glClearColor(0.322f, 0.322f, 0.332f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -136,8 +136,8 @@ void OpenGLDraw(blxRenderPacket* packet)
             blxAddPtrToList(batchData->modelMatrices, model);
         }
 
-        blxShaderSetMatrix4f(currentBatch.material->shader, "projection", packet->cam->projecionMatrix);
-        blxShaderSetMatrix4f(currentBatch.material->shader, "view", packet->cam->viewMatrix);
+        blxShader_SetMatrix4f(currentBatch.material->shader, "projection", packet->cam->projecionMatrix);
+        blxShader_SetMatrix4f(currentBatch.material->shader, "view", packet->cam->viewMatrix);
 
         //Buffer transform data here.
         glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(mat4) * blxGetListCount(batchData->modelMatrices), batchData->modelMatrices, GL_DYNAMIC_DRAW);
@@ -194,7 +194,7 @@ void OpenGLDraw(blxRenderPacket* packet)
         // }
 }
 
-void OpenGLInitMesh(blxMesh* mesh) {
+void blxGL_InitMesh(blxMesh* mesh) {
     // if (mesh->_meshData != NULL) {
     //     // TODO: refactor this.
     //     printf("MESH DATA ALREADY INITIALIZED!\n");
@@ -237,7 +237,7 @@ void OpenGLUpdateMesh(blxMesh* mesh)
     glBindVertexArray(0);
 }
 
-void OpenGLSetShadingMode(blxShadingMode mode)
+void blxGL_SetShadingMode(blxShadingMode mode)
 {
     switch (mode)
     {
@@ -267,7 +267,7 @@ static blxBool blxGLCheckShaderError(GLuint shader, GLenum errorType)
     return !success;
 }
 
-GLuint blxGLCreateShader(const char* fragSource, const char* vertSource)
+GLuint blxGL_CreateShader(const char* fragSource, const char* vertSource)
 {
     char errorLog[512];
     blxBool compiled;
@@ -336,32 +336,32 @@ static GLint blxGLGetUniform(GLuint shader, const char* name)
     return loc;
 }
 
-void blxGLSetFloat(GLuint shader, const char* uniformName, GLfloat value)
+void blxGL_SetFloat(GLuint shader, const char* uniformName, GLfloat value)
 {
     glProgramUniform1f(shader, blxGLGetUniform(shader, uniformName), value);
 }
 
-void blxGLSetInt(GLuint shader, const char* uniformName, GLint value)
+void blxGL_SetInt(GLuint shader, const char* uniformName, GLint value)
 {
     glProgramUniform1i(shader, blxGLGetUniform(shader, uniformName), value);
 }
 
-void blxGLSetVec4f(GLuint shader, const char* uniformName, vec4 value)
+void blxGL_SetVec4f(GLuint shader, const char* uniformName, vec4 value)
 {
     glProgramUniform4f(shader, blxGLGetUniform(shader, uniformName), value[0], value[1], value[2], value[3]);
 }
 
-void blxGLSetBool(GLuint shader, const char* uniformName, GLboolean value)
+void blxGL_SetBool(GLuint shader, const char* uniformName, GLboolean value)
 {
     glProgramUniform1i(shader, blxGLGetUniform(shader, uniformName), value);
 }
 
-void blxGLSetVec3f(GLuint shader, const char* uniformName, vec3 value)
+void blxGL_SetVec3f(GLuint shader, const char* uniformName, vec3 value)
 {
     glProgramUniform3f(shader, blxGLGetUniform(shader, uniformName), value[0], value[1], value[2]);
 }
 
-void blxGLSetMatrix4f(GLuint shader, const char* uniformName, mat4 value)
+void blxGL_SetMatrix4f(GLuint shader, const char* uniformName, mat4 value)
 {
     glProgramUniformMatrix4fv(shader, blxGLGetUniform(shader, uniformName), 1, GL_FALSE, value);
 }

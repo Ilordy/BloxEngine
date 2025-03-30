@@ -82,7 +82,7 @@ static blxBool CreateRenderingContext(GraphicsAPI graphicsAPI, HWND hWnd)
     return BLX_TRUE;
 }
 
-blxBool PlatformInit(platformState* platform, const char* appName, unsigned short width, unsigned short height, GraphicsAPI graphicsAPI)
+blxBool blxPlatform_Init(platformState* platform, const char* appName, unsigned short width, unsigned short height, GraphicsAPI graphicsAPI)
 {
     //TODO: Verify we still need this internal state..
     platform->internalState = malloc(sizeof(internalState));
@@ -140,7 +140,7 @@ blxBool PlatformInit(platformState* platform, const char* appName, unsigned shor
     return BLX_TRUE;
 }
 
-void PlatformShutDown(platformState* platform)
+void blxPlatform_ShutDown(platformState* platform)
 {
     internalState* state = (internalState*)platform->internalState;
 
@@ -152,7 +152,7 @@ void PlatformShutDown(platformState* platform)
     }
 }
 
-blxBool PlatformPumpMessages(platformState* platform)
+blxBool blxPlatform_PumpMessages(platformState* platform)
 {
     MSG msg;
     while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
@@ -164,7 +164,7 @@ blxBool PlatformPumpMessages(platformState* platform)
     return BLX_TRUE;
 }
 
-void PlatformWriteToConsole(const char* msg, uint8_t color)
+void blxPlatform_WriteToConsole(const char* msg, uint8_t color)
 {
     //Test this to just output certain text red.
     HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -177,7 +177,7 @@ void PlatformWriteToConsole(const char* msg, uint8_t color)
     WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), msg, (DWORD)length, numWritten, 0);
 }
 
-void PlatformWriteToConsoleError(const char* msg)
+void blxPlatform_WriteToConsoleError(const char* msg)
 {
     HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
     SetConsoleTextAttribute(handle, FOREGROUND_RED);
@@ -187,7 +187,7 @@ void PlatformWriteToConsoleError(const char* msg)
     WriteConsoleA(GetStdHandle(STD_ERROR_HANDLE), msg, (DWORD)length, numWritten, 0);
 }
 
-double PlatformGetTime()
+double blxPlatform_GetTime()
 {
     LARGE_INTEGER currentTime;
     QueryPerformanceCounter(&currentTime);
@@ -278,40 +278,40 @@ LRESULT CALLBACK WindowMsgProcess(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 }
 
 
-void* PlatformAllocate(unsigned long long size)
+void* blxPlatform_Allocate(unsigned long long size)
 {
     //TODO: Platform specific memory functionality.
     return malloc(size);
 }
 
-void* PlatformMemSetZero(void* block, unsigned long long size)
+void* blxPlatform_MemSetZero(void* block, unsigned long long size)
 {
     return memset(block, 0, size);
 }
 
-void PlatformFreeMemory(void* block)
+void blxPlatform_FreeMemory(void* block)
 {
     free(block);
 }
 
-void* PlatformMemCpy(void* dest, const void* src, unsigned long long size)
+void* blxPlatform_MemCpy(void* dest, const void* src, unsigned long long size)
 {
     return memcpy(dest, src, size);
 }
 
-void PlatformSleep(uint64 ms)
+void blxPlatform_Sleep(uint64 ms)
 {
     Sleep(ms);
 }
 
-blxBool PlatformOpenFilePanel(const char* title, const char* defDirectory, const char* extension, char* buffer)
+blxBool blxPlatform_OpenFilePanel(const char* title, const char* defDirectory, const char* extension, char* buffer)
 {
     OPENFILENAME ofn; // Common dialog box structure
     char strFilter[100];
     snprintf(strFilter, sizeof(strFilter), "(*%s)%c*%s%c%c", extension, '\0', extension, '\0');
 
     // Initialize OPENFILENAME
-    PlatformMemSetZero(&ofn, sizeof(ofn));
+    blxPlatform_MemSetZero(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = state->hwnd;
     ofn.lpstrFile = buffer;
@@ -332,7 +332,7 @@ blxBool PlatformOpenFilePanel(const char* title, const char* defDirectory, const
     return BLX_FALSE;
 }
 
-void PlatformSwapBuffers()
+void blxPlatform_SwapBuffers()
 {
     //TODO: Figure out if this is opengl specific.
     SwapBuffers(state->hdc);
