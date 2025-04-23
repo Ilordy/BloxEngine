@@ -48,7 +48,6 @@ link: scaffold $(OBJ_FILES)
 	@copy "Dependencies\BloxEngine\BloxEngine.dll" "bin\"
 	@xcopy .\res $(BUILD_DIR)\res /s /e /i /q /y /d
 	@xcopy .\Dependencies\BloxEngine\builtin $(BUILD_DIR)\builtin /s /e /i /q /y /d
-	@xcopy .\res $(BUILD_DIR)\res /s /e /i /q /y /d
 	@echo Sand Box Build Finished.
 
 .PHONY: compile

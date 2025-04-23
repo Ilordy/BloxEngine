@@ -61,12 +61,12 @@ typedef struct {
 
 blxBool StringCompare(void* a, void* b)
 {
-    return blxStrCmp((const char*)a, (const char*)b);
+    return blxStr_Cmp((const char*)a, (const char*)b);
 }
 
 // TODO: This should be in the blxString header file.
 uint64 StrToHash(void* key) {
-    return blxToHash(key, blxStrLen(key));
+    return blxToHash(key, blxStr_Len(key));
 }
 
 void _blxInitMaterialSystem()
@@ -162,7 +162,7 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
     //TODO: Use asserts instead of if statements for error checking.
     while (blxFileReadLine(matFile, 512, &p, &lineLength))
     {
-        blxStrTrim(buffer);
+        blxStr_Trim(buffer);
         BLXDEBUG("%s", buffer);
         //char* buf = buffer;
         char firstChar = buffer[0];
@@ -173,10 +173,10 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
             }break;
             case MAT_KEY_VERT[0]: {
                 char vertBuffer[8];
-                blxStrnCpy(vertBuffer, buffer, blxStrLen(MAT_KEY_VERT));
-                if (blxStrCmp(vertBuffer, MAT_KEY_VERT))
+                blxStrn_Cpy(vertBuffer, buffer, blxStr_Len(MAT_KEY_VERT));
+                if (blxStr_Cmp(vertBuffer, MAT_KEY_VERT))
                 {
-                    int equalsIndex = blxStrIndexOfChar(buffer, '=');
+                    int equalsIndex = blxStr_IndexOfChar(buffer, '=');
                     if (equalsIndex == -1) {
                         BLXERROR("Invalid format for vert path given, should be %s = \"path/to/vertfile.vert\"", MAT_KEY_VERT);
                         return BLX_FALSE;
@@ -201,10 +201,10 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
 
             case MAT_KEY_FRAG[0]: {
                 char fragBuffer[8];
-                blxStrnCpy(fragBuffer, buffer, blxStrLen(MAT_KEY_FRAG));
-                if (blxStrCmp(fragBuffer, MAT_KEY_FRAG))
+                blxStrn_Cpy(fragBuffer, buffer, blxStr_Len(MAT_KEY_FRAG));
+                if (blxStr_Cmp(fragBuffer, MAT_KEY_FRAG))
                 {
-                    int equalsIndex = blxStrIndexOfChar(buffer, '=');
+                    int equalsIndex = blxStr_IndexOfChar(buffer, '=');
                     if (equalsIndex == -1) {
                         // TODO: Reformat this to have the vert be directily from materialKeyWords array printed.
                         BLXERROR("Invalid format for frag path given, should be frag = \"path/to/fragfile.frag\"");
@@ -253,7 +253,7 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
                     continue;
                 }
 
-                int equalsIndex = blxStrIndexOfChar(buffer, '=');
+                int equalsIndex = blxStr_IndexOfChar(buffer, '=');
                 if (equalsIndex == -1) {
                     BLXWARNING("Invalid Variable Uniform format given should be [VarType] varName = varValue");
                     continue;
@@ -262,8 +262,8 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
                 //TODO: Refactor later.
                 //Get Uniform name.
                 char uniformName[128];
-                int startIndex = blxStrIndexOfChar(buffer, ']') + 1;
-                blxStrnCpy(uniformName, buffer + startIndex, equalsIndex - startIndex);
+                int startIndex = blxStr_IndexOfChar(buffer, ']') + 1;
+                blxStrn_Cpy(uniformName, buffer + startIndex, equalsIndex - startIndex);
 
                 switch (variableCase)
                 {
@@ -274,7 +274,7 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
                         blxMaterialProperty property;
                         property.propertyType = BLX_MAT_PROP_FLOAT;
                         property.floatValue = value;
-                        blxStrCpy(property.propertyName, uniformName);
+                        blxStr_Cpy(property.propertyName, uniformName);
                         blxAddValueToList(matData->properties, property);
                     }break;
 
@@ -284,7 +284,7 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
                         blxMaterialProperty property;
                         property.propertyType = BLX_MAT_PROP_INT;
                         property.intValue = value;
-                        blxStrCpy(property.propertyName, uniformName);
+                        blxStr_Cpy(property.propertyName, uniformName);
                         blxAddValueToList(matData->properties, property);
                     }break;
 
@@ -296,7 +296,7 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
                         blxMaterialProperty property;
                         property.propertyType = BLX_MAT_PROP_VEC3;
                         glm_vec3_copy(value, property.vec3Value.raw);
-                        blxStrCpy(property.propertyName, uniformName);
+                        blxStr_Cpy(property.propertyName, uniformName);
                         blxAddValueToList(matData->properties, property);
                     }break;
 
@@ -307,7 +307,7 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
                         blxMaterialProperty property;
                         property.propertyType = BLX_MAT_PROP_VEC4;
                         glm_vec4_copy(value, property.vec4Value.raw);
-                        blxStrCpy(property.propertyName, uniformName);
+                        blxStr_Cpy(property.propertyName, uniformName);
                         blxAddValueToList(matData->properties, property);
                     }break;
                 }
@@ -315,7 +315,7 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
         }
 
         //TODO: Our shader system/Resource System should keep track of what shaders are loaded.
-        if (matShader == -1 && !blxStrNullOrEmpty(fragPath) && !blxStrNullOrEmpty(vertPath))
+        if (matShader == -1 && !blxStr_NullOrEmpty(fragPath) && !blxStr_NullOrEmpty(vertPath))
         {
             matShader = blxShader_Create(fragPath, vertPath, BLX_FALSE);
             blxShader_UseShader(matShader);
@@ -359,7 +359,7 @@ void blxMaterial_SetValue(blxMaterial* mat, const char* propName, blxMaterialPro
     //TODO: This should be done with a hashtable, swap the properties list with a hashtable..
     for (uint64 i = 0; i < blxGetListCount(matData->properties); i++)
     {
-        if (blxStrCmp(propName, matData->properties[i].propertyName))
+        if (blxStr_Cmp(propName, matData->properties[i].propertyName))
         {
             prop = (blxMaterialProperty*)(&matData->properties[i]);
         }
@@ -401,7 +401,7 @@ blxBool blxMaterial_Load(const char* path, blxMaterial** outMat)
         BLXERROR("Cannot load another material as the max amount of loaded materials has been reached!");
         return BLX_FALSE;
     }
-    else if (blxStrLen(path) > blxMaxFilePath) {
+    else if (blxStr_Len(path) > blxMaxFilePath) {
         BLXERROR("File path: %s \nis greater than the max allowed file path!", path);
         return BLX_FALSE;
     }
@@ -417,7 +417,7 @@ blxBool blxMaterial_Load(const char* path, blxMaterial** outMat)
         MaterialData* matData = (MaterialData*)mat->_internalData;
 
         matData->path = (char*)mat + sizeof(blxMaterial) + sizeof(MaterialData);
-        blxStrCpy(matData->path, path);
+        blxStr_Cpy(matData->path, path);
         blxAddToHashTable(table, matData->path, &mat);
 
         materialCount++;

@@ -88,7 +88,7 @@ blxBool blxFileReadLine(blxFile* handle, uint64 maxLength, char** lineBuffer, ui
 
     char* buf = *lineBuffer;
     if (fgets(buf, maxLength, (FILE*)handle)) {
-        *outLineLength = blxStrLen(*lineBuffer);
+        *outLineLength = blxStr_Len(*lineBuffer);
         return BLX_TRUE;
     }
     return BLX_FALSE;

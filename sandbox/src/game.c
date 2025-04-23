@@ -25,7 +25,7 @@ uint64 ToHash(void* key) {
     return blxToHash(key, strlen(key));
 }
 
-blxBool intCmp(void* a, void* b) {
+blxBool IntCmp(void* a, void* b) {
     return *((int*)a) == *((int*)b);
 }
 
@@ -45,6 +45,50 @@ blxBool InitGame(blxGameInstance* gameInstance)
     state->currentModel.geometries = NULL;
     state->mainCam.transform.position[2] = 10;
 
+    char** strList = blxInitList(char*);
+    char* str1 = "Hello";
+    char* str2 = "World";
+    char* str3 = "Test";
+    blxAddBufferToList(strList, str1);
+
+    char* f = strList[0];
+
+    vec3 quadP1 = { -1.0f, 1.0f, 0.0f };
+    vec3 quadP2 = { 1.0f, 1.0f, 0.0f };
+    vec3 quadP3 = { 1.0f, -1.0f, 0.0f };
+    vec3 quadP4 = { -1.0f, -1.0f, 0.0f };
+
+    vec3* testList = blxInitList(vec3);
+
+    blxAddBufferToList(testList, quadP1);
+
+    vec3 quadTest;
+    glm_vec3_copy(testList[0], quadTest);
+
+
+    int** intPtrList = blxInitList(int*);
+    int a = 1;
+    int b = 2;
+    int c = 3;
+
+    int* intPtr = &a;
+    int* intPtr2 = &b;
+    int* intPtr3 = &c;
+    int intArray[3] = { 5, 2, 3 };
+    int** arrPtr = &intArray;
+
+    blxAddValueToList(intPtrList, intPtr);
+    blxAddValueToList(intPtrList, &intArray);
+    //blxAddBufferToList(intPtrList, &arrPtr);
+    //blxAddValueToList(intPtrList, intPtr3);
+    //intPtrList[1][0] = 5;
+    //intPtrList[0] = &a;
+
+    BLXDEBUG("Int 1: %d", *(intPtrList[0]));
+  
+    BLXDEBUG("Int 4: %d", intPtrList[1][0]);
+    BLXDEBUG("Int 5: %d", intPtrList[1][1]);
+    BLXDEBUG("Int 6: %d", intPtrList[1][2]);
 
     return BLX_TRUE;
 }
@@ -76,6 +120,8 @@ blxBool UpdateGame(float deltaTime)
     if (blxInputGetKeyDown(BLX_KEY_2)) {
         blxSetShadingMode(BLX_SHADING_WIREFRAME);
     }
+
+
 
     return BLX_TRUE;
 }

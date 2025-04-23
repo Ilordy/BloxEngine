@@ -133,7 +133,7 @@ void blxGL_Draw(blxRenderPacket* packet)
             mat4 model;
             _transform_modelMatrix(currentBatch.geometries[i].transform, model);
 
-            blxAddPtrToList(batchData->modelMatrices, model);
+            blxAddBufferToList(batchData->modelMatrices, model);
         }
 
         blxShader_SetMatrix4f(currentBatch.material->shader, "projection", packet->cam->projecionMatrix);

@@ -1,0 +1,10 @@
+#standard blox engine material
+# 0.678 IS ORIGINAL BASE COLOR!
+#TODO: Guid hashing instead of using file path for shader file.
+#TODO: Combine both shaders into one.
+vert = "builtin/shaders/Standard.vert"
+frag = "builtin/shaders/Standard.frag"
+[vec3] baseColor = 0.678, 0.678, 0.678
+[float] specular = 0.56
+[vec3] ambientColor = 1, 1, 1
+[float] ambientStrength = 0.7

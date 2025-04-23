@@ -3,15 +3,16 @@
 
 #include "core/blx_defines.h"
 
+
 /// @brief Initalizes a linked node. Useful for creating a linked node from a literal.
 /// @param linkedNodePtr This should be a blxLinkedNode pointer.
 /// @param value literal value to give.
+/// @note This macro will allocate memory for the value, so make sure to free it when done.
 #define blxInitLinkedNode(linkedNodePtr, value)\
 {\
-    linkedNodePtr = (blxLinkedNode*)malloc(sizeof(blxLinkedNode));\
     typeof(value)* temp = (typeof(value)*)malloc(sizeof(value));\
     *temp = value;\
-    result->value = temp;\
+    linkedNodePtr = blxCreateLinkedNode(temp);\
 }
 
 /// @brief Allocates memory to append a literal to the end of the list.
@@ -105,21 +106,6 @@ static blxLinkedNode* blxInsertLinkedNodeAfterNode(blxLinkedNode* target, void* 
     node->next = target->next;
     target->next = node;
     return node;
-}
-
-// TODO: Finialize this function.
-static blxBool blxIsPartOfLinkedList(blxLinkedNode* head, void* value)
-{
-    blxLinkedNode* temp = head;
-    while (temp != NULL)
-    {
-        if (temp->value == value)
-        {
-            return BLX_TRUE;
-        }
-        temp = temp->next;
-    }
-    return BLX_FALSE;
 }
 
 /// @brief Frees all allocated memory in the linked list.

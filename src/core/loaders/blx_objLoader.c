@@ -33,12 +33,12 @@ blxBool VertexKeyCompare(void* a, void* b)
 
 static blxBool StrKeyCompare(void* a, void* b)
 {
-    return blxStrCmp((char*)a, (char*)b);
+    return blxStr_Cmp((char*)a, (char*)b);
 }
 
 // TODO: This should be in the blxString header file.
 static uint64 StrToHash(void* key) {
-    return blxToHash(key, blxStrLen(key));
+    return blxToHash(key, blxStr_Len(key));
 }
 
 static blxHashTable* ReadMtlFile(const char* mtlPath)
@@ -67,7 +67,7 @@ static blxHashTable* ReadMtlFile(const char* mtlPath)
                 char matName[128];
 
                 //offset by 7 for the newmtl keyword and space.
-                blxStrCpy(matName, lineBuffer + 7);
+                blxStr_Cpy(matName, lineBuffer + 7);
 
                 blxAddToHashTableAllocA(matTable, matName, mat);
             }break;
@@ -363,8 +363,8 @@ void blxImportModelFromObj(blxModel* outModel, const char* objPath)
 
                     //allocate 7 bytes to include the null terminator.
                     char mtlTok[7];
-                    blxStrnCpy(mtlTok, lineBuffer, 6);
-                    if (blxStrCmp(mtlTok, "usemtl")) {
+                    blxStrn_Cpy(mtlTok, lineBuffer, 6);
+                    if (blxStr_Cmp(mtlTok, "usemtl")) {
 
                         // The first geometry will not have a material till after the second iteration.
                         if (geoPtr->material != NULL)
@@ -381,7 +381,7 @@ void blxImportModelFromObj(blxModel* outModel, const char* objPath)
 
                         //Assuming mat name is less than 64..
                         char matName[65];
-                        blxStrCpy(matName, lineBuffer + 7);
+                        blxStr_Cpy(matName, lineBuffer + 7);
 
                         blxMaterial* mat;
                         if (matTable && blxHashTableKeyExist(matTable, matName, &mat)) {
@@ -398,9 +398,9 @@ void blxImportModelFromObj(blxModel* outModel, const char* objPath)
             //Assuming this is a mttlib
             case 'm': {
                 //Assume the mttlib is in the same path as the obj.
-                int periodIndex = blxStrIndexOfLastChar(objPath, '.');
+                int periodIndex = blxStr_IndexOfLastChar(objPath, '.');
                 char mtlFileName[blxMaxFilePath];
-                blxStrCpy(mtlFileName, objPath);
+                blxStr_Cpy(mtlFileName, objPath);
 
                 mtlFileName[periodIndex + 1] = 'm';
                 mtlFileName[periodIndex + 2] = 't';
