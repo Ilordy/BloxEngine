@@ -13,7 +13,8 @@ OBJ_FILES := $(SRC_FILES:%=$(OBJ_DIR)/%.o)
 DIRECTORIES := \$(DIR) $(subst $(DIR),,$(shell dir $(DIR) /S/ AD/ B | findstr /i src | findstr /V /i obj-bin))
 
 CFLAGS := -Wall -fdeclspec -Wno-inconsistent-dllimport
-DEFINES := -DGLEW_STATIC -D_CRT_SECURE_NO_WARNINGS -DBLXEXPORT 
+# TODO: Remove -DCGLM_ALL_UNALIGNED once you remove cglm!
+DEFINES := -DGLEW_STATIC -D_CRT_SECURE_NO_WARNINGS -DBLXEXPORT -DCGLM_ALL_UNALIGNED
 INCLUDE_FLAGS := -IDependencies\CGLM\include -IDependencies\GLEW\include -IDependencies\GLFW\include -Isrc\vendor\stb_image -Isrc
 LINKER_FLAGS := -shared -lDependencies\GLEW\lib\Release\x64\glew32s -lDependencies\GLFW\lib-vc2022\glfw3_mt -lopengl32 -luser32 -lGdi32 -lkernel32 -llibcmt -lShell32 -lComdlg32
 

@@ -10,6 +10,7 @@
 #include "intrin.h"
 #ifdef CGLM_SIMD_x86
 
+
 #ifdef CGLM_ALL_UNALIGNED
 #  define glmm_load(p)      _mm_loadu_ps(p)
 #  define glmm_store(p, a)  _mm_storeu_ps(p, a)

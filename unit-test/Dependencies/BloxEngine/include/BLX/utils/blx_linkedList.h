@@ -22,7 +22,7 @@
 {\
     typeof(value)* temp = (typeof(value)*)malloc(sizeof(value));\
     *temp = value;\
-    blxAppendLinkedNode(head, temp);\
+    blxAppendLinkedNodeAlloc(head, temp);\
 }
 
 /// @brief Helper macro for auto casting and derefrencing the linked node value.
@@ -35,6 +35,7 @@ struct blxLinkedNode {
     void* value;
     size_t _valueSize;
 };
+
 /// @brief Structure for interacting with linked lists.
 typedef struct blxLinkedNode blxLinkedNode;
 
@@ -49,11 +50,43 @@ static blxLinkedNode* blxCreateLinkedNode(void* value)
     return result;
 }
 
+/// @brief Creates a linked node from provided memory.
+/// @note Memory provided must be at least sizeof(blxLinkedNode).
+/// @param memory The memory to use for the linked node.
+/// @param value The value to assign to the linked node.
+/// @note This function does not allocate memory for the value, so make sure to do that yourself.
+/// @return A newly created linked node.
+static blxLinkedNode* blxLinkedNode_Create(void* memory, void* value)
+{
+    blxLinkedNode* node = (blxLinkedNode*)memory;
+    node->value = value;
+    node->next = NULL;
+    return node;
+}
+
+/// @brief Appends a new node to the end of a linked list.
+/// @param head The start of the linked list.
+/// @param memory The memory to use for the new node.
+/// @note Memory provided must be at least sizeof(blxLinkedNode).
+/// @param value The value to assign to the new node.
+/// @return The newly created linked node.
+static blxLinkedNode* blxLinkedNode_Append(blxLinkedNode* head, void* memory, void* value)
+{
+    blxLinkedNode* node = blxLinkedNode_Create(memory, value);
+    blxLinkedNode* currentNode = head;
+    while (currentNode->next != NULL)
+    {
+        currentNode = currentNode->next;
+    }
+    currentNode->next = node;
+    return node;
+}
+
 /// @brief Appends a new node to the end of a linked list.
 /// @param head The start of the list.
 /// @param value Pointer to the value the new node should have.
 /// @return The newly created node.
-static blxLinkedNode* blxAppendLinkedNode(blxLinkedNode* head, void* value)
+static blxLinkedNode* blxAppendLinkedNodeAlloc(blxLinkedNode* head, void* value)
 {
     blxLinkedNode* node = blxCreateLinkedNode(value);
     blxLinkedNode* currentNode = head;
@@ -108,20 +141,7 @@ static blxLinkedNode* blxInsertLinkedNodeAfterNode(blxLinkedNode* target, void* 
     return node;
 }
 
-// TODO: Finialize this function.
-static blxBool blxIsPartOfLinkedList(blxLinkedNode* head, void* value)
-{
-    blxLinkedNode* temp = head;
-    while (temp != NULL)
-    {
-        if (temp->value == value)
-        {
-            return BLX_TRUE;
-        }
-        temp = temp->next;
-    }
-    return BLX_FALSE;
-}
+
 
 /// @brief Frees all allocated memory in the linked list.
 /// @param head The start of the linked list.

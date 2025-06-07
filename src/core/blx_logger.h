@@ -18,6 +18,9 @@ typedef enum blxLogType {
 }blxLogType;
 
 // TODO: TEMP FOR NOW! TILL PLATFORM LAYER IS OUT.
+
+// TODO: MAKE a BLXTRACELOG macro that will log the file and line number of the log message AND the stack trace.
+
 BLXAPI void blxInitalizeLogging();
 
 BLXAPI void blxLog(blxLogType logType, const char* message, ...);

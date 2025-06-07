@@ -11,7 +11,8 @@ ASSEMBLY := sandbox
 CFLAGS = -g -Wall
 
 DEPENDENCIES = Dependencies
-DEFINES := -DBLX_DEBUG -D_CRT_SECURE_NO_WARNINGS
+# TODO: Remove -DCGLM_ALL_UNALIGNED once you remove cglm!
+DEFINES := -DBLX_DEBUG -D_CRT_SECURE_NO_WARNINGS -DCGLM_ALL_UNALIGNED
 
 INCLUDE_FLAGS := -IDependencies\BloxEngine\include -IDependencies\BloxEngine\include\BLX
 

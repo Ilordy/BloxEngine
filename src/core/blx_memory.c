@@ -3,17 +3,18 @@
 #include "internal/platform/platform.h"
 #include "blx_memArena.h"
 #include "utils/blx_assertions.h"
+#include "blx_freeList.h"
 
-// TODO: custom string class
-#include "string.h"
+// TEMP
+#include <string.h>
 
-// TODO: Figure out if we'd like to also support memory stats for arenas. Arenas can also have their own individual memStats.
 typedef struct memStat {
     uint64 totalMemAllocated;
     uint64 taggedAllocations[_BLXMEMORY_MAX_TAGS];
 }memStat;
 
 static memStat stats;
+static blxFreeList* freeList;
 
 static const char* memStringTags[_BLXMEMORY_MAX_TAGS] = {
     "LIST",
@@ -30,6 +31,12 @@ static const char* memStringTags[_BLXMEMORY_MAX_TAGS] = {
 void _blxInitMemory()
 {
     blxPlatform_MemSetZero(&stats, sizeof(stats));
+
+    // TODO: The amount of memory to allocate should be able to be provided by the user as an option.
+    uint64 memSize = GIBIBYTES(1) / 2;
+
+    void* appMem = blxPlatform_Allocate(memSize);
+    freeList = blxFreeList_Create(appMem, memSize);
 }
 
 void _blxShutDownMemory()
@@ -37,22 +44,26 @@ void _blxShutDownMemory()
 
 }
 
-void* blxAllocate(unsigned long long size, blxMemoryTag tag)
+void* blxAllocate(uint64 size, blxMemoryTag tag)
 {
     stats.totalMemAllocated += size;
     stats.taggedAllocations[tag] += size;
 
-    void* block = blxPlatform_Allocate(size);
-    blxPlatform_MemSetZero(block, size);
-    return block;
+    return blxFreeList_GetMem(freeList, size);
 }
 
-void blxFree(void* block, unsigned long long size, blxMemoryTag tag)
+void blxFree(void* block, blxMemoryTag tag)
 {
-    stats.totalMemAllocated -= size;
-    stats.taggedAllocations[tag] -= size;
+    // Allow for null pointers to be "freed" to not have as much null checking in general code.
+    if (!block) {
+        return;
+    }
+    
+    uint64 memSize = blxFreeList_GetMemSize(block);
+    stats.totalMemAllocated -= memSize;
+    stats.taggedAllocations[tag] -= memSize;
 
-    blxPlatform_FreeMemory(block);
+    blxFreeList_FreeMem(freeList, block);
 }
 
 void* blxMemCpy(void* dest, const void* src, uint64 size)
@@ -136,6 +147,7 @@ void blxArena_Clear(blxMemoryArena* arena)
 
 void blxArena_Free(blxMemoryArena* arena)
 {
+    // TODO: UPDATE ARENAS TO USE FREELIST.
     blxPlatform_FreeMemory(arena->base);
 }
 #pragma endregion

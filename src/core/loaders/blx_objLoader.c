@@ -4,6 +4,7 @@
 #include "utils/blx_hashTable.h"
 #include "utils/blx_fileManagement.h"
 #include "core/blx_string.h"
+#include "utils/blx_vlist.h"
 #include "cglm/struct/vec2-ext.h"
 //TODO: Move into resource system/ resource loader.
 
@@ -46,8 +47,8 @@ static blxHashTable* ReadMtlFile(const char* mtlPath)
     blxFile* mtlFile;
     if (!blxOpenFile(mtlPath, BLX_FILE_MODE_READ, &mtlFile)) {
         return NULL;
+        
     }
-
     char lineBuffer[512];
     char* p = &lineBuffer;
     uint64 lineLength;
@@ -109,17 +110,22 @@ void blxImportModelFromObj(blxModel* outModel, const char* objPath)
     // Initialize geometry pointer to the first element in the list.
     // For clarity we are setting it to the address after defrencing the pointer of the first element.
     blxRenderableGeometry* geoPtr = &outModel->geometries[0];
+
+
     geoPtr->mesh.vertices = blxInitList(vList_blxVertex);
     geoPtr->mesh.indices = blxInitList(vList_indices);
+
     geoPtr->material = NULL;
     geoPtr->transform = &outModel->transform;
 
     blxHashTable* table = blxCreateHashTable(blxVertex, unsigned int, VertexKeyCompare);
     blxHashTable* matTable = NULL;
 
-    vec3s* positions = blxInitList(vec3s);
-    vec3s* normals = blxInitList(vec3s);
-    vec2s* texCoords = blxInitList(vec2s);
+    // Reserve some initial space to reduce reallocations.
+    // 4096 is a reasonable default for small/medium models, but you can tune as needed.
+    vec3s* positions = blxInitListWithSize(vec3s, 4096);
+    vec3s* normals = blxInitListWithSize(vec3s, 4096);
+    vec2s* texCoords = blxInitListWithSize(vec2s, 4096);
 
     char lineBuffer[512];
     char* p = &lineBuffer;
@@ -422,15 +428,17 @@ void blxImportModelFromObj(blxModel* outModel, const char* objPath)
     {
         geoPtr->material = blxMaterial_CreateDefault();
     }
+    else{
+        blxFreeHashTable(matTable);
+    }
 
 
-    // //If matTable is not null and there is 0 geometries then 
-    // //there is only one material in the material table and we add the geometry to the list as it has not been added.
-    // else if (blxGetListCount(outModel->geometries) == 0)
-    // {
-    //     blxAddValueToList(outModel->geometries, geometry);
-    // }
+    // Free the allocated lists and hash tables.
+    blxFreeList(positions);
+    blxFreeList(normals);
+    blxFreeList(texCoords);
+    blxFreeHashTable(table);
 
-    //TODO FREE MEMORY!
+    // Close the file after reading.
     blxCloseFile(objFile);
 }

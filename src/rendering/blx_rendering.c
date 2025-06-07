@@ -12,6 +12,7 @@
 #include "core/blx_memory.h"
 #include "rendering/blx_material.h"
 #include "rendering/blx_shader.h"
+#include "utils/blx_vlist.h"
 
 typedef struct
 {
@@ -37,10 +38,10 @@ void GLDebug(GLenum source, GLenum type, GLuint id,
     GLenum severity, GLsizei length,
     const GLchar* msg, const void* data)
 {
-    printf("-------\n");
-    printf("%s\n", msg);
-    printf("%s %d\n", __FILE__, __LINE__);
-    printf("-------\n");
+    // printf("-------\n");
+    // printf("%s\n", msg);
+    // printf("%s %d\n", __FILE__, __LINE__);
+    // printf("-------\n");
 
     //BLXASSERT(BLX_FALSE);
 }
@@ -51,7 +52,7 @@ void blxInitRenderer(GraphicsAPI graphicsToUse)
 {
     if (!initialized) {
         //Instead of malloc might be better to just have a static state.
-        renderer = (blxRenderer*)malloc(sizeof(blxRenderer));
+        renderer = (blxRenderer*)blxAllocate(sizeof(blxRenderer), BLXMEMORY_TAG_RENDERER);
         blxZeroMemory(&renderer->packet, sizeof(blxRenderPacket));
         //TODO: TEMP FOR NOW TILL WE GET A MATERIAL SYSTEM.
         renderer->packet.directionalLight.diffuse = (vec3s){ 1.0f, 1.0f, 1.0f };

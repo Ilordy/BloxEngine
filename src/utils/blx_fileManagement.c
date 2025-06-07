@@ -5,6 +5,7 @@
 #include "core/blx_string.h"
 #include "utils/blx_assertions.h"
 #include "core/blx_memory.h"
+#include <string.h>
 
 
 blxBool blxOpenFilePanel(const char* title, const char* defDirectory, const char* extension, char* buffer)
@@ -70,6 +71,7 @@ uint64 blxFileGetSize(blxFile* handle)
     return size;
 }
 
+// TODO: Memory should be provided by user...
 char* blxFileReadAllText(blxFile* handle, uint64* outBufSize)
 {
     BLXASSERT(handle != NULL);

@@ -5,6 +5,7 @@
 #include "utils/blx_fileManagement.h"
 #include "internal/opengl.h"
 #include "core/blx_memory.h"
+#include "core/blx_logger.h"
 
 typedef struct {
 	void (*SetFloat) (Shader shader, const char* name, float value);
@@ -71,7 +72,7 @@ char* shader_parse(const char* path)
 	}
 
 	const long size = st.st_size;
-	char* buffer = malloc(size);
+	char* buffer = blxAllocate(size, BLXMEMORY_TAG_STRING);
 	size_t bytesRead = fread(buffer, sizeof(char), size, shaderFile);
 	buffer[bytesRead] = '\0';
 
@@ -86,14 +87,17 @@ Shader blxShader_Create(const char* fragPath, const char* vertPath, GLboolean us
 
 	blxOpenFile(fragPath, BLX_FILE_MODE_READ, &fragFile);
 	blxOpenFile(vertPath, BLX_FILE_MODE_READ, &vertFile);
+
+	// TODO: Refactor this function call later...
 	uint64 fragSize, vertSize;
 	char* fragSource = blxFileReadAllText(fragFile, &fragSize);
+	BLXWARNING("Fragment Shader Source: %s", fragSource);
 	char* vertSource = blxFileReadAllText(vertFile, &vertSize);
 
 	Shader shader = shaderSystem.CreateShader(fragSource, vertSource);
 
-	blxFree(fragSource, fragSize, BLXMEMORY_TAG_STRING);
-	blxFree(vertSource, vertSize, BLXMEMORY_TAG_STRING);
+	blxFree(fragSource, BLXMEMORY_TAG_STRING);
+	blxFree(vertSource, BLXMEMORY_TAG_STRING);
 
 	return shader;
 

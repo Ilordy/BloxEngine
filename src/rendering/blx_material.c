@@ -4,6 +4,7 @@
 #include "utils/blx_fileManagement.h"
 #include "utils/blx_hashTable.h"
 #include "core/blx_memory.h"
+#include "utils/blx_vlist.h"
 
 #define MAT_KEY_VERT "vert"
 #define MAT_KEY_FRAG "frag"
@@ -159,10 +160,11 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
     char vertPath[blxMaxFilePath] = BLX_EMPTY_STRING;
     char fragPath[blxMaxFilePath] = BLX_EMPTY_STRING;
 
-    //TODO: Use asserts instead of if statements for error checking.
+    
     while (blxFileReadLine(matFile, 512, &p, &lineLength))
     {
-        blxStr_Trim(buffer);
+       
+        blxStr_TrimAll(buffer);
         BLXDEBUG("%s", buffer);
         //char* buf = buffer;
         char firstChar = buffer[0];

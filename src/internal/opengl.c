@@ -2,6 +2,7 @@
 #include "rendering/blx_rendering.h"
 #include "core/blx_logger.h"
 #include "core/blx_memory.h"
+#include "utils/blx_vlist.h"
 //TODO: Add support for index buffers
 
 typedef struct {
@@ -194,6 +195,7 @@ void blxGL_Draw(blxRenderPacket* packet)
         // }
 }
 
+// TODO: OLD PLS DELETE THIS LATER
 void blxGL_InitMesh(blxMesh* mesh) {
     // if (mesh->_meshData != NULL) {
     //     // TODO: refactor this.

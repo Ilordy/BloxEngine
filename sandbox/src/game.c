@@ -33,7 +33,7 @@ blxBool IntCmp(void* a, void* b) {
 blxBool InitGame(blxGameInstance* gameInstance)
 {
     BLXINFO("Application Starting...");
-
+    
     state = (gameState*)blxAllocate(sizeof(gameState), BLXMEMORY_TAG_GAME);
 
     // state->currentModel.mesh.shader = blxShaderCreate("res/shaders/Standard.frag",
@@ -44,51 +44,6 @@ blxBool InitGame(blxGameInstance* gameInstance)
     //Temp for now.
     state->currentModel.geometries = NULL;
     state->mainCam.transform.position[2] = 10;
-
-    char** strList = blxInitList(char*);
-    char* str1 = "Hello";
-    char* str2 = "World";
-    char* str3 = "Test";
-    blxAddBufferToList(strList, str1);
-
-    char* f = strList[0];
-
-    vec3 quadP1 = { -1.0f, 1.0f, 0.0f };
-    vec3 quadP2 = { 1.0f, 1.0f, 0.0f };
-    vec3 quadP3 = { 1.0f, -1.0f, 0.0f };
-    vec3 quadP4 = { -1.0f, -1.0f, 0.0f };
-
-    vec3* testList = blxInitList(vec3);
-
-    blxAddBufferToList(testList, quadP1);
-
-    vec3 quadTest;
-    glm_vec3_copy(testList[0], quadTest);
-
-
-    int** intPtrList = blxInitList(int*);
-    int a = 1;
-    int b = 2;
-    int c = 3;
-
-    int* intPtr = &a;
-    int* intPtr2 = &b;
-    int* intPtr3 = &c;
-    int intArray[3] = { 5, 2, 3 };
-    int** arrPtr = &intArray;
-
-    blxAddValueToList(intPtrList, intPtr);
-    blxAddValueToList(intPtrList, &intArray);
-    //blxAddBufferToList(intPtrList, &arrPtr);
-    //blxAddValueToList(intPtrList, intPtr3);
-    //intPtrList[1][0] = 5;
-    //intPtrList[0] = &a;
-
-    BLXDEBUG("Int 1: %d", *(intPtrList[0]));
-  
-    BLXDEBUG("Int 4: %d", intPtrList[1][0]);
-    BLXDEBUG("Int 5: %d", intPtrList[1][1]);
-    BLXDEBUG("Int 6: %d", intPtrList[1][2]);
 
     return BLX_TRUE;
 }
@@ -147,7 +102,7 @@ void ProcessMovement(float deltaTime)
     {
         vec3 forward;
         blxTransform_Forward(camTrans, forward);
-        glm_vec3_muladds(forward, moveSpeed, camTrans);
+        glm_vec3_muladds(forward, moveSpeed, camTrans->position);
     }
 
     if (blxInputGetKey(BLX_KEY_S))
@@ -155,14 +110,14 @@ void ProcessMovement(float deltaTime)
         vec3 forward;
         blxTransform_Forward(camTrans, forward);
         glm_vec3_negate(forward);
-        glm_vec3_muladds(forward, moveSpeed, camTrans);
+        glm_vec3_muladds(forward, moveSpeed, camTrans->position);
     }
 
     if (blxInputGetKey(BLX_KEY_A))
     {
         vec3 right;
         blxTransform_Right(camTrans, right);
-        glm_vec3_muladds(right, moveSpeed, camTrans);
+        glm_vec3_muladds(right, moveSpeed, camTrans->position);
     }
 
     if (blxInputGetKey(BLX_KEY_D))
@@ -170,7 +125,7 @@ void ProcessMovement(float deltaTime)
         vec3 left;
         blxTransform_Right(camTrans, left);
         glm_vec3_negate(left);
-        glm_vec3_muladds(left, moveSpeed, camTrans);
+        glm_vec3_muladds(left, moveSpeed, camTrans->position);
     }
 }
 

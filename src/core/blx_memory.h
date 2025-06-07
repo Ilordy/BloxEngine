@@ -8,19 +8,19 @@ typedef enum blxMemoryTag {
     /// @brief Memory used for linked lists.        
     BLXMEMORY_TAG_LINKEDLIST,
     /// @brief Memory used for dictionaries.
-    BLXMEMORY_TAG_DICT,      
+    BLXMEMORY_TAG_DICT,
     /// @brief Memory used for strings.  
-    BLXMEMORY_TAG_STRING,   
+    BLXMEMORY_TAG_STRING,
     /// @brief Memory used for application data.   
-    BLXMEMORY_TAG_APPLICATION, 
+    BLXMEMORY_TAG_APPLICATION,
     /// @brief Memory used for renderer data.
-    BLXMEMORY_TAG_RENDERER,    
+    BLXMEMORY_TAG_RENDERER,
     /// @brief Memory used for textures.
-    BLXMEMORY_TAG_TEXTURE,     
+    BLXMEMORY_TAG_TEXTURE,
     /// @brief Memory used for game data.
-    BLXMEMORY_TAG_GAME,       
+    BLXMEMORY_TAG_GAME,
     /// @brief Memory used for materials.
-    BLXMEMORY_TAG_MATERIAL,  
+    BLXMEMORY_TAG_MATERIAL,
 
     _BLXMEMORY_MAX_TAGS
 } blxMemoryTag;
@@ -29,13 +29,12 @@ typedef enum blxMemoryTag {
 /// @param size The size of the block to allocate.
 /// @param tag Memory tag to associate with this allocation.
 /// @return A pointer to the allocated memory.
-BLXAPI void* blxAllocate(unsigned long long size, blxMemoryTag tag);
+BLXAPI void* blxAllocate(uint64 size, blxMemoryTag tag);
 
 /// @brief Frees a previously allocated block of memory.
 /// @param block Pointer to the memory block to free.
-/// @param size The size of the block being freed.
 /// @param tag Memory tag associated with this allocation.
-BLXAPI void blxFree(void* block, unsigned long long size, blxMemoryTag tag);
+BLXAPI void blxFree(void* block, blxMemoryTag tag);
 
 /// @brief Copies memory from one location to another.
 /// @param dest Destination memory block.

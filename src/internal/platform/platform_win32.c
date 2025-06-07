@@ -8,6 +8,7 @@
 #include <GL/glew.h>
 #include <GL/wglew.h>
 #include <GL/GL.h>
+#include "core/blx_memory.h"
 
 typedef struct
 {
@@ -70,7 +71,7 @@ static blxBool CreateRenderingContext(GraphicsAPI graphicsAPI, HWND hWnd)
                 MessageBoxA(0, "Failed to initialize OpenGL!", "Error", MB_ICONEXCLAMATION | MB_OK);
                 return BLX_FALSE;
             }
-            
+
             PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB =
                 (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
             HGLRC context = wglCreateContextAttribsARB(dc, NULL, attribs);
@@ -85,7 +86,7 @@ static blxBool CreateRenderingContext(GraphicsAPI graphicsAPI, HWND hWnd)
 blxBool blxPlatform_Init(platformState* platform, const char* appName, unsigned short width, unsigned short height, GraphicsAPI graphicsAPI)
 {
     //TODO: Verify we still need this internal state..
-    platform->internalState = malloc(sizeof(internalState));
+    platform->internalState = blxAllocate(sizeof(internalState), BLXMEMORY_TAG_APPLICATION);
     state = (internalState*)platform->internalState;
 
     state->hInstance = GetModuleHandleA(0);

@@ -1,4 +1,5 @@
 #include "blx_model.h"
+#include "utils/blx_vlist.h"
 
 void blxModel_Init(blxModel* model)
 {
