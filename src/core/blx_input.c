@@ -32,7 +32,7 @@ void _blxInitInputSystem()
 
 void _blxShutDownInputSystem()
 {
-    initialized = false;
+    initialized = BLX_FALSE;
 }
 
 void _blxUpdateInput(double deltaTime)

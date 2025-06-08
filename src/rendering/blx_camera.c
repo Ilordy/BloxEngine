@@ -1,16 +1,16 @@
 #include "rendering/blx_camera.h"
 
-void camera_init(Camera* cam, float fov)
+void blxCamera_Init(Camera* cam, float fov)
 {
-	transform_init(&cam->transform);
+	blxTransform_Init(&cam->transform);
 	glm_mat4_identity(cam->viewMatrix);
 	glm_mat4_identity(cam->projecionMatrix);
 	cam->fov = fov;
-	camera_setProjection(cam, PERSPECTIVE);
+	blxCamera_SetProjection(cam, PERSPECTIVE);
 
 }
 
-void camera_setProjection(Camera* cam, CameraProjectionType projType)
+void blxCamera_SetProjection(Camera* cam, CameraProjectionType projType)
 {
 	switch (projType)
 	{

@@ -13,7 +13,8 @@ OBJ_FILES := $(SRC_FILES:%=$(OBJ_DIR)/%.o)
 DIRECTORIES := \$(DIR) $(subst $(DIR),,$(shell dir $(DIR) /S/ AD/ B | findstr /i src | findstr /V /i obj-bin))
 
 CFLAGS := -Wall -fdeclspec -Wno-inconsistent-dllimport
-DEFINES := -DGLEW_STATIC -D_CRT_SECURE_NO_WARNINGS -DBLXEXPORT 
+# TODO: Remove -DCGLM_ALL_UNALIGNED once you remove cglm!
+DEFINES := -DGLEW_STATIC -D_CRT_SECURE_NO_WARNINGS -DBLXEXPORT -DCGLM_ALL_UNALIGNED
 INCLUDE_FLAGS := -IDependencies\CGLM\include -IDependencies\GLEW\include -IDependencies\GLFW\include -Isrc\vendor\stb_image -Isrc
 LINKER_FLAGS := -shared -lDependencies\GLEW\lib\Release\x64\glew32s -lDependencies\GLFW\lib-vc2022\glfw3_mt -lopengl32 -luser32 -lGdi32 -lkernel32 -llibcmt -lShell32 -lComdlg32
 
@@ -37,18 +38,19 @@ scaffold:
 	@echo Scaffolding folder structure...
 	-@setlocal enableextensions enabledelayedexpansion && mkdir $(addprefix $(OBJ_DIR), $(DIRECTORIES)) 2>NUL || cd .
 	-@setlocal enableextensions enabledelayedexpansion && mkdir $(OBJ_DIR)\src 2>NUL || cd .
-	@xcopy Dependencies\GLFW\include\GLFW $(INCLUDES_DIR)\GLFW /s /e /i /q /y
-	@xcopy Dependencies\GLEW\include\GL $(INCLUDES_DIR)\GL /s /e /i /q /y
-	@xcopy Dependencies\CGLM\include\cglm $(INCLUDES_DIR)\cglm /s /e /i /q /y
-	@xcopy builtin $(BUILD_DIR)\builtin /s /e /i /q /y
-	@xcopy "src\*.h" $(INCLUDES_DIR)\BLX /s /e /i /q /y 
+	@xcopy Dependencies\GLFW\include\GLFW $(INCLUDES_DIR)\GLFW /s /e /i /q /y /d
+	@xcopy Dependencies\GLEW\include\GL $(INCLUDES_DIR)\GL /s /e /i /q /y /d
+	@xcopy Dependencies\CGLM\include\cglm $(INCLUDES_DIR)\cglm /s /e /i /q /y /d
+	@xcopy builtin $(BUILD_DIR)\builtin /s /e /i /q /y /d
+	@xcopy "src\*.h" $(INCLUDES_DIR)\BLX /s /e /i /q /y /d
 	@rmdir /s /q "$(INCLUDES_DIR)\BLX\internal
 	@echo Done.
 
 .PHONY: link
 link: scaffold $(OBJ_FILES)
 	@echo Linking $(ASSEMBLY)...
-	$(CC) $(OBJ_FILES) -o $(BUILD_DIR)\$(ASSEMBLY)$(EXTENSION) $(LINKER_FLAGS)
+	@$(CC) $(OBJ_FILES) -o $(BUILD_DIR)\$(ASSEMBLY)$(EXTENSION) $(LINKER_FLAGS)
+	@echo Build Finished.
 	
 .PHONY: compile
 compile:
@@ -61,6 +63,6 @@ clean:
 	@echo Done Cleaing.
 	
 $(OBJ_DIR)/%.c.o: %.c
-	@echo	$<...
+	@echo $<...
 	$(CC) $< $(CFLAGS) -c -o $@ $(DEFINES) $(INCLUDE_FLAGS)
 	

@@ -5,11 +5,12 @@
 #include "core/blx_string.h"
 #include "utils/blx_assertions.h"
 #include "core/blx_memory.h"
+#include <string.h>
 
 
 blxBool blxOpenFilePanel(const char* title, const char* defDirectory, const char* extension, char* buffer)
 {
-    return PlatformOpenFilePanel(title, defDirectory, extension, buffer);
+    return blxPlatform_OpenFilePanel(title, defDirectory, extension, buffer);
 }
 
 blxBool blxFileExists(const char* path)
@@ -59,9 +60,6 @@ void blxCloseFile(blxFile* file)
 }
 
 
-/// @brief Only works when reading file in binary mode.
-/// @param handle 
-/// @return 
 uint64 blxFileGetSize(blxFile* handle)
 {
     BLXASSERT(handle != NULL);
@@ -73,6 +71,7 @@ uint64 blxFileGetSize(blxFile* handle)
     return size;
 }
 
+// TODO: Memory should be provided by user...
 char* blxFileReadAllText(blxFile* handle, uint64* outBufSize)
 {
     BLXASSERT(handle != NULL);
@@ -91,35 +90,8 @@ blxBool blxFileReadLine(blxFile* handle, uint64 maxLength, char** lineBuffer, ui
 
     char* buf = *lineBuffer;
     if (fgets(buf, maxLength, (FILE*)handle)) {
-        *outLineLength = blxStrLen(*lineBuffer);
+        *outLineLength = blxStr_Len(*lineBuffer);
         return BLX_TRUE;
     }
     return BLX_FALSE;
-}
-
-int64 blxFileGetPos(blxFile* file)
-{
-    int64 pos;
-
-    fgetpos((FILE*)file, &pos);
-      //return ftell((FILE*)file);
-    return pos;
-}
-
-//TODO: Assert pos is within file size.
-void blxFileSetPos(blxFile* file, int64* pos)
-{
-    //fseek((FILE*)file, pos, SEEK_SET);
-    fsetpos((FILE*)file, pos);
-}
-
-long blxFileGetPosTest(blxFile* file)
-{
-    return ftell((FILE*)file);
-}
-
-void blxFileSetPosTest(blxFile* file, long offset)
-{
-    fflush(file);
-    fseek(file, offset, SEEK_CUR);
 }

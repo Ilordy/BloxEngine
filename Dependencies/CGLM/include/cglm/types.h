@@ -11,7 +11,7 @@
 #if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L)
 # include <stdalign.h>
 #endif
-
+//__declspec(align(X))
 #if defined(_MSC_VER)
 /* do not use alignment for older visual studio versions */
 #  if _MSC_VER < 1913 /*  Visual Studio 2017 version 15.6  */

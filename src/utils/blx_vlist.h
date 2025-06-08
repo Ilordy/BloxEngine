@@ -1,24 +1,35 @@
 #pragma once
 #include <stdlib.h>
 #include <string.h>
+#include "core/blx_memory.h"
+
+// TODO: Use defines for defining the alloc and free functions for the list.
+
+/// @brief Macro to define the memory tag for list allocations.
+/// @note If not defined elsewhere, it defaults to BLXMEMORY_TAG_LIST.
+#ifndef LIST_MEM_TAG
+#define LIST_MEM_TAG BLXMEMORY_TAG_LIST
+#endif
 
 ///The factor to multiply our list size by when resizing.
 #define BLX_GROWTH_FACTOR 2
 
-///Copies a value to the list.
+///@brief Copies a value to the list.
 #define blxAddValueToList(list, value)\
 {\
         typeof(value) temp = value;\
         list = _blxAddToList(list, &temp);\
 }
 
-///Adds a pointer to the list.
-///Use this for lists with pointer types.
-#define blxAddPtrToList(list, value)\
+///@brief Copies a static buffer to the list.
+///@note This is a shallow copy, so the data in the buffer will be copied to the list.
+///@note Best used with statics buffers (e.g. vec3, vec4, int[3], etc..).
+#define blxAddBufferToList(list, value)\
 {\
     list = _blxAddToList(list, value);\
 }
 
+///@brief Adds an array of values to the list.
 #define blxAddArrayToList(list, array, arrayCount)\
 {\
     for (uint64 i = 0; i < arrayCount; i++)\
@@ -42,7 +53,7 @@
 
 static void* _blxInitList(unsigned long elementSize, unsigned long intitialSize)
 {
-    char* list = (char*)malloc(_BLX_HEADER_SIZE + intitialSize * elementSize);
+    char* list = (char*)blxAllocate(_BLX_HEADER_SIZE + intitialSize * elementSize, LIST_MEM_TAG);
     unsigned long* header = list;
     header[_BLX_MAX_LENGTH_I] = intitialSize;
     header[_BLX_COUNT_I] = 0;
@@ -69,7 +80,7 @@ static void* _blxAddToList(void* list, void* element)
 
         _BLX_SET_HEADER(newList, _BLX_COUNT_I, count);
 
-        free((char*)list - _BLX_HEADER_SIZE);
+        blxFree((char*)list - _BLX_HEADER_SIZE, LIST_MEM_TAG);
 
         list = newList;
     }
@@ -100,6 +111,6 @@ static inline void blxClearList(void* list)
 
 static inline void blxFreeList(void* list)
 {
-    free((char*)list - _BLX_HEADER_SIZE);
+    blxFree((char*)list - _BLX_HEADER_SIZE, LIST_MEM_TAG);
 }
 

@@ -4,16 +4,17 @@
 #include "core/blx_defines.h"
 //TODO: Refactor function names.
 
-void OpenGLDraw(blxRenderPacket* packet);
-void OpenGLInit();
-void OpenGLInitMesh(blxMesh* mesh);
+void blxGL_Draw(blxRenderPacket* packet);
+void blxGL_Init();
+void blxGL_InitMesh(blxMesh* mesh);
+// TODO: Verify this function is no longer needed.
 void OpenGLUpdateMesh(blxMesh* mesh);
-void OpenGLSetShadingMode(blxShadingMode mode);
-void blxGLSetFloat(GLuint shader, const char* uniformName, GLfloat value);
-void blxGLSetInt(GLuint shader, const char* uniformName, GLint value);
-void blxGLSetVec4f(GLuint shader, const char* uniformName, vec4 value);
-void blxGLSetBool(GLuint shader, const char* uniformName, GLboolean value);
-void blxGLSetVec3f(GLuint shader, const char* uniformName, vec3 value);
-void blxGLSetMatrix4f(GLuint shader, const char* uniformName, mat4 value);
-void blxGLRegisterBatch(MaterialGroup* matGroup);
-GLuint blxGLCreateShader(const char* fragSource, const char* vertSource);
+void blxGL_SetShadingMode(blxShadingMode mode);
+void blxGL_SetFloat(GLuint shader, const char* uniformName, GLfloat value);
+void blxGL_SetInt(GLuint shader, const char* uniformName, GLint value);
+void blxGL_SetVec4f(GLuint shader, const char* uniformName, vec4 value);
+void blxGL_SetBool(GLuint shader, const char* uniformName, GLboolean value);
+void blxGL_SetVec3f(GLuint shader, const char* uniformName, vec3 value);
+void blxGL_SetMatrix4f(GLuint shader, const char* uniformName, mat4 value);
+void blxGL_RegisterBatch(MaterialGroup* matGroup);
+GLuint blxGL_CreateShader(const char* fragSource, const char* vertSource);

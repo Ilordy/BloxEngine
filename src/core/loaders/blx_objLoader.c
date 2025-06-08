@@ -4,6 +4,7 @@
 #include "utils/blx_hashTable.h"
 #include "utils/blx_fileManagement.h"
 #include "core/blx_string.h"
+#include "utils/blx_vlist.h"
 #include "cglm/struct/vec2-ext.h"
 //TODO: Move into resource system/ resource loader.
 
@@ -33,12 +34,12 @@ blxBool VertexKeyCompare(void* a, void* b)
 
 static blxBool StrKeyCompare(void* a, void* b)
 {
-    return blxStrCmp((char*)a, (char*)b);
+    return blxStr_Cmp((char*)a, (char*)b);
 }
 
 // TODO: This should be in the blxString header file.
 static uint64 StrToHash(void* key) {
-    return blxToHash(key, blxStrLen(key));
+    return blxToHash(key, blxStr_Len(key));
 }
 
 static blxHashTable* ReadMtlFile(const char* mtlPath)
@@ -46,8 +47,8 @@ static blxHashTable* ReadMtlFile(const char* mtlPath)
     blxFile* mtlFile;
     if (!blxOpenFile(mtlPath, BLX_FILE_MODE_READ, &mtlFile)) {
         return NULL;
+        
     }
-
     char lineBuffer[512];
     char* p = &lineBuffer;
     uint64 lineLength;
@@ -67,7 +68,7 @@ static blxHashTable* ReadMtlFile(const char* mtlPath)
                 char matName[128];
 
                 //offset by 7 for the newmtl keyword and space.
-                blxStrCpy(matName, lineBuffer + 7);
+                blxStr_Cpy(matName, lineBuffer + 7);
 
                 blxAddToHashTableAllocA(matTable, matName, mat);
             }break;
@@ -103,23 +104,28 @@ void blxImportModelFromObj(blxModel* outModel, const char* objPath)
         return;
     }
 
-    blxInitModel(outModel);
+    blxModel_Init(outModel);
 
     blxAddValueToList(outModel->geometries, (blxRenderableGeometry) { 0 });
     // Initialize geometry pointer to the first element in the list.
     // For clarity we are setting it to the address after defrencing the pointer of the first element.
     blxRenderableGeometry* geoPtr = &outModel->geometries[0];
+
+
     geoPtr->mesh.vertices = blxInitList(vList_blxVertex);
     geoPtr->mesh.indices = blxInitList(vList_indices);
+
     geoPtr->material = NULL;
     geoPtr->transform = &outModel->transform;
 
     blxHashTable* table = blxCreateHashTable(blxVertex, unsigned int, VertexKeyCompare);
     blxHashTable* matTable = NULL;
 
-    vec3s* positions = blxInitList(vec3s);
-    vec3s* normals = blxInitList(vec3s);
-    vec2s* texCoords = blxInitList(vec2s);
+    // Reserve some initial space to reduce reallocations.
+    // 4096 is a reasonable default for small/medium models, but you can tune as needed.
+    vec3s* positions = blxInitListWithSize(vec3s, 4096);
+    vec3s* normals = blxInitListWithSize(vec3s, 4096);
+    vec2s* texCoords = blxInitListWithSize(vec2s, 4096);
 
     char lineBuffer[512];
     char* p = &lineBuffer;
@@ -363,8 +369,8 @@ void blxImportModelFromObj(blxModel* outModel, const char* objPath)
 
                     //allocate 7 bytes to include the null terminator.
                     char mtlTok[7];
-                    blxStrnCpy(mtlTok, lineBuffer, 6);
-                    if (blxStrCmp(mtlTok, "usemtl")) {
+                    blxStrn_Cpy(mtlTok, lineBuffer, 6);
+                    if (blxStr_Cmp(mtlTok, "usemtl")) {
 
                         // The first geometry will not have a material till after the second iteration.
                         if (geoPtr->material != NULL)
@@ -381,7 +387,7 @@ void blxImportModelFromObj(blxModel* outModel, const char* objPath)
 
                         //Assuming mat name is less than 64..
                         char matName[65];
-                        blxStrCpy(matName, lineBuffer + 7);
+                        blxStr_Cpy(matName, lineBuffer + 7);
 
                         blxMaterial* mat;
                         if (matTable && blxHashTableKeyExist(matTable, matName, &mat)) {
@@ -398,9 +404,9 @@ void blxImportModelFromObj(blxModel* outModel, const char* objPath)
             //Assuming this is a mttlib
             case 'm': {
                 //Assume the mttlib is in the same path as the obj.
-                int periodIndex = blxStrIndexOfLastChar(objPath, '.');
+                int periodIndex = blxStr_IndexOfLastChar(objPath, '.');
                 char mtlFileName[blxMaxFilePath];
-                blxStrCpy(mtlFileName, objPath);
+                blxStr_Cpy(mtlFileName, objPath);
 
                 mtlFileName[periodIndex + 1] = 'm';
                 mtlFileName[periodIndex + 2] = 't';
@@ -422,15 +428,17 @@ void blxImportModelFromObj(blxModel* outModel, const char* objPath)
     {
         geoPtr->material = blxMaterial_CreateDefault();
     }
+    else{
+        blxFreeHashTable(matTable);
+    }
 
 
-    // //If matTable is not null and there is 0 geometries then 
-    // //there is only one material in the material table and we add the geometry to the list as it has not been added.
-    // else if (blxGetListCount(outModel->geometries) == 0)
-    // {
-    //     blxAddValueToList(outModel->geometries, geometry);
-    // }
+    // Free the allocated lists and hash tables.
+    blxFreeList(positions);
+    blxFreeList(normals);
+    blxFreeList(texCoords);
+    blxFreeHashTable(table);
 
-    //TODO FREE MEMORY!
+    // Close the file after reading.
     blxCloseFile(objFile);
 }

@@ -5,4 +5,8 @@ bin/
 obj-bin/
 res/
 
+sandbox/bin/
+sandbox/obj-bin/
+sandbox/Dependencies/
+
 #gitignore not finalized.
