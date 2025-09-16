@@ -1,6 +1,7 @@
 #pragma once
-#include "core/blx_defines.h"
-#include "core/blx_gameType.h"
+#include "BLX/core/blx_defines.h"
+#include "BLX/core/blx_gameType.h"
+#include "BLX/core/blx_gameType.h"
 #include "rendering/blx_camera.h"
 
 typedef struct {

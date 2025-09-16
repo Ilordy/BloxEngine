@@ -3,6 +3,7 @@
 #include <stdio.h>
 #define BLX_TRUE 1
 #define BLX_FALSE 0
+#define BLXINLINE __forceinline
 
 ///@brief gets number of bytes in a gibibyte.
 #define GIBIBYTES(x) (x * 1024 * 1024 * 1024)

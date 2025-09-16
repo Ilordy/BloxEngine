@@ -8,13 +8,24 @@
 #include "core/loaders/blx_objLoader.h"
 #include "utils/blx_hashTable.h"
 #include "rendering/blx_material.h"
+#include "physics/blx_particle.h"
+#include "utils/blx_vlist.h"
+#include "BLX/rendering/blx_rendering.h"
+#include "BLX/maths/blx_vec3.h"
+#include "BLX/maths/blx_mat3.h"
+#include "BLX/maths/blx_mat4.h"
 
 #include <string.h>
 
 static gameState* state;
 
+static blxModel* ballObjects;
+
+static blxModel ballModel;
+
 void ProcessMovement(float deltaTime);
 void ProcessMouseMove(float deltaTime);
+void SpawnPhysicsObject();
 
 blxBool StrCmp(void* a, void* b) {
 
@@ -33,7 +44,7 @@ blxBool IntCmp(void* a, void* b) {
 blxBool InitGame(blxGameInstance* gameInstance)
 {
     BLXINFO("Application Starting...");
-    
+
     state = (gameState*)blxAllocate(sizeof(gameState), BLXMEMORY_TAG_GAME);
 
     // state->currentModel.mesh.shader = blxShaderCreate("res/shaders/Standard.frag",
@@ -45,8 +56,65 @@ blxBool InitGame(blxGameInstance* gameInstance)
     state->currentModel.geometries = NULL;
     state->mainCam.transform.position[2] = 10;
 
+    ballObjects = blxInitListWithSize(blxModel, 100);
+
+    //blxImportModelFromObj(&ballModel, "builtin/geometry/sphere.obj");
+
+   // for (int i = 0; i < 100; i++) {
+
+   //     memcpy(&ballObjects[i], &ballModel, sizeof(blxModel));
+
+   //     BLXDEBUG("Ball %d: %p", i, &ballObjects[i]);
+
+   // }
+
+    blxMat3 mat3 = BLX_MAT3_IDENTITY;
+
+    blxVec3 pos = { 5, 1, 6 };
+
+    pos = blxMat3_MultVec3(mat3, pos);
+
+    mat3.m10 = 5.5f;
+    mat3.raw[2][1] = 2.0f;
+
+    mat3 = blxMat3_Inverse(mat3);
+
+    BLXDEBUG("Transformed Position: %f, %f, %f", pos.x, pos.y, pos.z);
+
+    mat3s cglmmat3; 
+    glm_mat3_identity(cglmmat3.raw);
+
+    cglmmat3.m10 = 5.5f;
+    cglmmat3.m21 = 2.0f;
+
+    glm_mat3_inv(cglmmat3.raw, cglmmat3.raw);
+    
+
+    blxVec3 pos2 = { 5, 1, 6 };
+
+    glm_mat3_mulv(cglmmat3.raw, pos2.raw, pos2.raw);
+
+    BLXDEBUG("Transformed Position: %f, %f, %f", pos2.x, pos2.y, pos2.z);
+
+    blxMat4 mat4 = BLX_MAT4_IDENTITY;
+
+    mat4.m10 = 5.5f;
+    mat4.m21 = 2.0f;
+
+    mat4 = blxMat4_Inverse(mat4);
+
+    mat4s cglmmat4;
+    glm_mat4_identity(cglmmat4.raw);
+    cglmmat4.m10 = 5.5f;
+    cglmmat4.m21 = 2.0f;
+
+    glm_mat4_inv(cglmmat4.raw, cglmmat4.raw);
+
     return BLX_TRUE;
 }
+
+float accumlatedTime = 0.0f;
+blxBool pressed = BLX_FALSE;
 
 blxBool UpdateGame(float deltaTime)
 {
@@ -76,7 +144,18 @@ blxBool UpdateGame(float deltaTime)
         blxSetShadingMode(BLX_SHADING_WIREFRAME);
     }
 
+    if (blxGetMouseButtonDown(BLX_LMB))
+    {
+        //SpawnPhysicsObject();
+        pressed = BLX_TRUE;
+    }
 
+    accumlatedTime += deltaTime;
+    if (accumlatedTime >= 0.1f && pressed) {
+        SpawnPhysicsObject();
+        accumlatedTime = 0.0f;
+        pressed = BLX_FALSE;
+    }
 
     return BLX_TRUE;
 }
@@ -90,6 +169,12 @@ blxBool Render()
     if (state->currentModel.geometries != NULL) {
         blxDrawModel(&state->currentModel);
     }
+
+    for (int i = 0; i < blxGetListCount(ballObjects); i++)
+    {
+        blxDrawModel(&ballObjects[i]);
+    }
+
     return BLX_TRUE;
 }
 
@@ -156,3 +241,75 @@ void ProcessMouseMove(float deltaTime)
     glm_quatv(yRot, xAngle, Vec3_Up);
     glm_quat_mul(yRot, xRot, state->mainCam.transform.rotation);
 }
+
+// TODO: This should be moved to the physics module of our sandbox.
+void SpawnPhysicsObject()
+{
+    blxModel newBall;
+
+    blxModel_Init(&newBall);
+    blxRenderableGeometry geometry = {
+        .mesh = ballModel.geometries[0].mesh,
+        .material = blxMaterial_CreateDefault(),
+        .transform = &newBall.transform
+    };
+
+    vec4s randomColor = {
+        .r = ((float)rand() / RAND_MAX),
+        .g = ((float)rand() / RAND_MAX),
+        .b = ((float)rand() / RAND_MAX),
+        .a = 1.0f
+    };
+
+    float randScale = ((float)rand() / RAND_MAX) * (1.5f - 0.2f) + 0.2f; // Scale between 0.2 and 2.0
+
+    glm_vec3_scale(newBall.transform.scale, randScale, newBall.transform.scale);
+
+    blxMaterial_SetValue(geometry.material, "baseColor", BLX_MAT_PROP_VEC4, &randomColor);
+
+    blxAddValueToList(newBall.geometries, geometry);
+    //blxMemCpy(&newBall, &ballModel, sizeof(blxModel));
+    //newBall.geometries[0].transform = &newBall.transform;
+
+    blxAddValueToList(ballObjects, newBall);
+
+    blxParticle* particle = blxAllocate(sizeof(blxParticle), BLXMEMORY_TAG_PHYSICS);
+    blxParticle_Init(particle, &ballObjects[blxGetListCount(ballObjects) - 1].transform);
+
+    int count = blxGetListCount(ballObjects);
+
+    blxModel* lastBall = &ballObjects[blxGetListCount(ballObjects) - 1];
+
+    lastBall->geometries[0].transform = &lastBall->transform;
+
+
+
+
+    float speed = 25.0f; // desired launch speed
+
+// Generate random components in range [-1, 1]
+    float rx = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+    float ry = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+    float rz = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+
+    // Ensure Y is positive
+    if (ry < 0.0f) ry = -ry;
+
+    // Normalize vector
+    float mag = sqrtf(rx * rx + ry * ry + rz * rz);
+    if (mag == 0.0f) mag = 1.0f;
+
+    blxVec3 dir = {
+        .x = rx / mag,
+        .y = ry / mag,
+        .z = rz / mag
+    };
+
+    // Scale by speed
+    blxVec3 velocity = blxVec3_Mult(dir, speed);
+
+    // Set the particle's velocity
+    particle->velocity = velocity;
+}
+
+

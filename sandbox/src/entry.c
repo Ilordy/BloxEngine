@@ -1,4 +1,4 @@
-#include "core/blx_entry.h"
+#include "BLX/core/blx_entry.h"
 #include "game.h"
 
 blxBool blxCreateGame(blxGameInstance* outGame) {

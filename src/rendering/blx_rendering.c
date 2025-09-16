@@ -138,7 +138,6 @@ void blxAddCameraToRender(Camera* cam)
 void blxDrawModel(blxModel* model)
 {
 
-
     //TODO: This needs to be refactored!
     for (unsigned int i = 0; i < blxGetListCount(model->geometries); i++)
     {
@@ -160,8 +159,7 @@ void blxDrawModel(blxModel* model)
 
     }
 
-    renderer->packet.models[renderer->packet.modelCount] = *model;
-    renderer->packet.modelCount += 1;
+    //blxAddValueToList(renderer->packet.modelsList, model);
 }
 
 void blxDrawUI(blxModel* model)
@@ -184,7 +182,6 @@ void blxDraw()
 {
     camera_update(renderer->packet.cam);
     renderer->Draw(&renderer->packet);
-    renderer->packet.modelCount = 0;
     renderer->packet.uiCount = 0;
     for (uint64 i = 0; i < blxGetListCount(renderer->packet.vlist_materialGroups); i++)
     {
