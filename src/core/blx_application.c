@@ -5,7 +5,7 @@
 #include "blx_memory.h"
 #include "blx_input.h"
 #include "utils/blx_clock.h"
-
+#include "internal/physicsWorld.h"
 
 typedef struct {
     blxBool isRunning;
@@ -21,6 +21,10 @@ typedef struct {
 
 static blxBool initialized = BLX_FALSE;
 static appState app;
+
+// TODO: This should be moved to a config file.
+const double fixedTimeStep = 1.0f / 60; //60 fps
+double physicsAccumulator = 0.0;
 
 blxBool blxCreateApplication(blxGameInstance* gameInstance)
 {
@@ -46,6 +50,7 @@ blxBool blxCreateApplication(blxGameInstance* gameInstance)
     }
 
     blxInitRenderer(app.currentGraphicAPI);
+    InitializePhysicsWorld();
 
     if (!app.gameInstance->Init(app.gameInstance)) {
         BLXERROR("Game failed to initialize!");
@@ -95,6 +100,13 @@ blxBool blxRunApplication()
 
             blxDraw();
             blxPlatform_SwapBuffers();
+
+            physicsAccumulator += delta;
+            while (physicsAccumulator >= fixedTimeStep) {
+                //Update the physics world with the fixed delta time.
+                UpdatePhysicsWorld(fixedTimeStep);
+                physicsAccumulator -= fixedTimeStep;
+            }
 
             double frameEndTime = blxPlatform_GetTime();
             double frameElapsedTime = frameEndTime - frameStartTime;

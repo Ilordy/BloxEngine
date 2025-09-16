@@ -21,6 +21,8 @@ typedef enum blxMemoryTag {
     BLXMEMORY_TAG_GAME,
     /// @brief Memory used for materials.
     BLXMEMORY_TAG_MATERIAL,
+    /// @brief Memory used for physics data.
+    BLXMEMORY_TAG_PHYSICS,
 
     _BLXMEMORY_MAX_TAGS
 } blxMemoryTag;

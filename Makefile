@@ -63,6 +63,5 @@ clean:
 	@echo Done Cleaing.
 	
 $(OBJ_DIR)/%.c.o: %.c
-	@echo $<...
 	$(CC) $< $(CFLAGS) -c -o $@ $(DEFINES) $(INCLUDE_FLAGS)
 	
