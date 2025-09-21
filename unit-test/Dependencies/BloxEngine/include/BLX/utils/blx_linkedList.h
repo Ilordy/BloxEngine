@@ -20,7 +20,7 @@
 /// @param value The value to add to the linked list.
 #define blxAppendLinkedNodeLiteral(head, value)\
 {\
-    typeof(value)* temp = (typeof(value)*)malloc(sizeof(value));\
+    BLXTYPEOF(value)* temp = (BLXTYPEOF(value)*)malloc(sizeof(value));\
     *temp = value;\
     blxAppendLinkedNodeAlloc(head, temp);\
 }

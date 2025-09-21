@@ -17,8 +17,8 @@
 ///@brief Copies a value to the list.
 #define blxAddValueToList(list, value)\
 {\
-        typeof(value) temp = value;\
-        list = _blxAddToList(list, &temp);\
+    BLXTYPEOF(value) temp = value;\
+    list = (BLXTYPEOF(list))_blxAddToList(list, &temp);\
 }
 
 ///@brief Copies a static buffer to the list.
@@ -54,7 +54,7 @@
 static void* _blxInitList(unsigned long elementSize, unsigned long intitialSize)
 {
     char* list = (char*)blxAllocate(_BLX_HEADER_SIZE + intitialSize * elementSize, LIST_MEM_TAG);
-    unsigned long* header = list;
+    unsigned long* header = (unsigned long*)list;
     header[_BLX_MAX_LENGTH_I] = intitialSize;
     header[_BLX_COUNT_I] = 0;
     header[_BLX_ELEMENT_SIZE_I] = elementSize;

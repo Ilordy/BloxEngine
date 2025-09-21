@@ -15,3 +15,4 @@ blxBool InitGame(blxGameInstance* gameInstance);
 blxBool UpdateGame(float deltaTime);
 
 blxBool Render();
+

@@ -1,3 +1,7 @@
+
+
+//TEMP FOR NOW
+extern "C" {
 #include "game.h"
 #include "core/blx_logger.h"
 #include "core/blx_input.h"
@@ -14,6 +18,7 @@
 #include "BLX/maths/blx_vec3.h"
 #include "BLX/maths/blx_mat3.h"
 #include "BLX/maths/blx_mat4.h"
+}
 
 #include <string.h>
 
@@ -33,7 +38,7 @@ blxBool StrCmp(void* a, void* b) {
 }
 
 uint64 ToHash(void* key) {
-    return blxToHash(key, strlen(key));
+    return blxToHash(key, strlen((const char*)(key)));
 }
 
 blxBool IntCmp(void* a, void* b) {
@@ -152,7 +157,8 @@ blxBool UpdateGame(float deltaTime)
 
     accumlatedTime += deltaTime;
     if (accumlatedTime >= 0.1f && pressed) {
-        SpawnPhysicsObject();
+        // TODO: FIX THIS METHOD NO WORKY!
+        //SpawnPhysicsObject();
         accumlatedTime = 0.0f;
         pressed = BLX_FALSE;
     }
@@ -273,7 +279,7 @@ void SpawnPhysicsObject()
 
     blxAddValueToList(ballObjects, newBall);
 
-    blxParticle* particle = blxAllocate(sizeof(blxParticle), BLXMEMORY_TAG_PHYSICS);
+    blxParticle* particle = static_cast<blxParticle*>(blxAllocate(sizeof(blxParticle), BLXMEMORY_TAG_PHYSICS));
     blxParticle_Init(particle, &ballObjects[blxGetListCount(ballObjects) - 1].transform);
 
     int count = blxGetListCount(ballObjects);
