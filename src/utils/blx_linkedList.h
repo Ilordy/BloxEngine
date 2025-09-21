@@ -1,11 +1,8 @@
 #pragma once
 #include <vcruntime_string.h>
-#include "core/blx_memory.h"
+
 #include "core/blx_defines.h"
 
-#ifndef LINKLIST_MEM_TAG
-#define LINKLIST_MEM_TAG BLXMEMORY_TAG_LINKEDLIST
-#endif
 
 /// @brief Initalizes a linked node. Useful for creating a linked node from a literal.
 /// @param linkedNodePtr This should be a blxLinkedNode pointer.
@@ -13,7 +10,7 @@
 /// @note This macro will allocate memory for the value, so make sure to free it when done.
 #define blxInitLinkedNode(linkedNodePtr, value)\
 {\
-    typeof(value)* temp = (typeof(value)*)blxAllocate(sizeof(value), LINKLIST_MEM_TAG);\
+    typeof(value)* temp = (typeof(value)*)malloc(sizeof(value));\
     *temp = value;\
     linkedNodePtr = blxCreateLinkedNode(temp);\
 }
@@ -23,7 +20,7 @@
 /// @param value The value to add to the linked list.
 #define blxAppendLinkedNodeLiteral(head, value)\
 {\
-    typeof(value)* temp = (typeof(value)*)blxAllocate(sizeof(value), LINKLIST_MEM_TAG);\
+    BLXTYPEOF(value)* temp = (BLXTYPEOF(value)*)malloc(sizeof(value));\
     *temp = value;\
     blxAppendLinkedNodeAlloc(head, temp);\
 }
@@ -36,6 +33,7 @@
 struct blxLinkedNode {
     struct blxLinkedNode* next;
     void* value;
+    size_t _valueSize;
 };
 
 /// @brief Structure for interacting with linked lists.
@@ -46,7 +44,7 @@ typedef struct blxLinkedNode blxLinkedNode;
 /// @return The newly created linked node.
 static blxLinkedNode* blxCreateLinkedNode(void* value)
 {
-    blxLinkedNode* result = (blxLinkedNode*)blxAllocate(sizeof(blxLinkedNode), LINKLIST_MEM_TAG);
+    blxLinkedNode* result = (blxLinkedNode*)malloc(sizeof(blxLinkedNode));
     result->value = value;
     result->next = NULL;
     return result;
@@ -143,6 +141,8 @@ static blxLinkedNode* blxInsertLinkedNodeAfterNode(blxLinkedNode* target, void* 
     return node;
 }
 
+
+
 /// @brief Frees all allocated memory in the linked list.
 /// @param head The start of the linked list.
 /// @param freeValue Set to true to also free the allocated memory of the linked node's value.
@@ -154,8 +154,8 @@ static void blxFreeLinkedList(blxLinkedNode* head, blxBool freeValue)
         head = currentNode->next;
         if (freeValue)
         {
-            blxFree(currentNode->value, LINKLIST_MEM_TAG);
+            free(currentNode->value);
         }
-        blxFree(currentNode, LINKLIST_MEM_TAG);
+        free(currentNode);
     }
 }

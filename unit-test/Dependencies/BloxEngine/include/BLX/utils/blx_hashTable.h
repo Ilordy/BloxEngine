@@ -275,7 +275,7 @@ static blxHashTable* _blxCreateHashTable(uint64 keySize, uint64 valueSize, uint6
 static blxLinkedNode* _blxLinkedNodeFromHashKey(blxHashTable* table, const void* key)
 {
     uint64 index;
-    _BLXTABLE_GET_BUCKET_INDEX(table, key, &index);
+    _BLXTABLE_GET_BUCKET_INDEX(table, (void*)key, &index);
     blxLinkedNode* currentNode = table->_buckets[index];
     while (currentNode)
     {
@@ -283,7 +283,7 @@ static blxLinkedNode* _blxLinkedNodeFromHashKey(blxHashTable* table, const void*
         {
             blxHashTableEntry* entry = (blxHashTableEntry*)currentNode->value;
 
-            if (entry->key && table->KeyCompare(entry->key, key))
+            if (entry->key && table->KeyCompare(entry->key, (void*)key))
             {
                 return currentNode;
             }

@@ -46,3 +46,10 @@ typedef long long int64;
 #ifdef _GNUC
 #define LINUX
 #endif
+
+
+#ifdef __cplusplus
+#define BLXTYPEOF(x) decltype(x)
+#else
+#define BLXTYPEOF(x) typeof(x)
+#endif

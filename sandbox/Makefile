@@ -8,6 +8,17 @@ BUILD_DIR = bin
 CC = clang 
 ASSEMBLY := sandbox
 
+rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
+
+#BEGIN CPP
+CXX = clang++
+CXXFLAGS = -std=c++17 -fdeclspec -Wno-inconsistent-dllimport -g -Wall
+SRC_FILES_CPP := $(call rwildcard, src/,*.cpp)
+OBJ_FILES_CPP := $(SRC_FILES_CPP:%=$(OBJ_DIR)/%.o)
+#END CPP
+
+#	@$(CC) $(OBJ_FILES) -o $(BUILD_DIR)\$(ASSEMBLY)$(EXTENSION) $(LINKER_FLAGS)
+
 CFLAGS = -g -Wall
 
 DEPENDENCIES = Dependencies
@@ -16,7 +27,7 @@ DEFINES := -DBLX_DEBUG -D_CRT_SECURE_NO_WARNINGS -DCGLM_ALL_UNALIGNED
 
 INCLUDE_FLAGS := -IDependencies\BloxEngine\include -IDependencies\BloxEngine\include\BLX
 
-rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
+
 
 SRC_FILES := $(call rwildcard, src/,*.c)
 HEADER_FILES := $(call rwildcard, Dependencies/,*.h)
@@ -43,9 +54,9 @@ scaffold:
 	@echo Done.
 
 .PHONY: link
-link: scaffold $(OBJ_FILES)
+link: scaffold $(OBJ_FILES) $(OBJ_FILES_CPP)
 	@echo Linking $(ASSEMBLY)...
-	$(CC) $(OBJ_FILES) -o $(BUILD_DIR)\$(ASSEMBLY)$(EXTENSION) $(LINKER_FLAGS)
+	$(CXX) $(OBJ_FILES) $(OBJ_FILES_CPP) -o $(BUILD_DIR)\$(ASSEMBLY)$(EXTENSION) $(LINKER_FLAGS)
 	@copy "Dependencies\BloxEngine\BloxEngine.dll" "bin\"
 	@xcopy .\res $(BUILD_DIR)\res /s /e /i /q /y /d
 	@xcopy .\Dependencies\BloxEngine\builtin $(BUILD_DIR)\builtin /s /e /i /q /y /d
@@ -64,4 +75,8 @@ clean:
 $(OBJ_DIR)/%.c.o: %.c
 	@echo $<...
 	$(CC) $< $(CFLAGS) -c -o $@ $(DEFINES) $(INCLUDE_FLAGS)
+
+$(OBJ_DIR)/%.cpp.o: %.cpp
+	@echo $<...
+	$(CXX) $< $(CXXFLAGS) -c -o $@ $(DEFINES) $(INCLUDE_FLAGS)
 	

@@ -8,6 +8,15 @@ INCLUDES_DIR = bin\include
 
 #recursive wildcard
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
+
+#BEGIN CPP
+CXX = clang++
+CXXFLAGS = -std=c++17 -fdeclspec -Wno-inconsistent-dllimport -Wall
+SRC_FILES_CPP := $(call rwildcard, src/,*.cpp)
+OBJ_FILES_CPP := $(SRC_FILES_CPP:%=$(OBJ_DIR)/%.o)
+#END CPP
+
+
 SRC_FILES := $(call rwildcard, src/,*.c)
 OBJ_FILES := $(SRC_FILES:%=$(OBJ_DIR)/%.o)
 DIRECTORIES := \$(DIR) $(subst $(DIR),,$(shell dir $(DIR) /S/ AD/ B | findstr /i src | findstr /V /i obj-bin))
@@ -28,6 +37,7 @@ ifdef release
 else
 	@echo building in DEBUG mode
 	$(eval CFLAGS += -g)
+	$(eval CXXFLAGS += -g)
 	$(eval LINKER_FLAGS += -g)
 	$(eval DEFINES += -DBLX_DEBUG)
 endif
@@ -47,9 +57,9 @@ scaffold:
 	@echo Done.
 
 .PHONY: link
-link: scaffold $(OBJ_FILES)
+link: scaffold $(OBJ_FILES) $(OBJ_FILES_CPP)
 	@echo Linking $(ASSEMBLY)...
-	@$(CC) $(OBJ_FILES) -o $(BUILD_DIR)\$(ASSEMBLY)$(EXTENSION) $(LINKER_FLAGS)
+	$(CXX) $(OBJ_FILES) $(OBJ_FILES_CPP) -o $(BUILD_DIR)\$(ASSEMBLY)$(EXTENSION) $(LINKER_FLAGS)
 	@echo Build Finished.
 	
 .PHONY: compile
@@ -60,8 +70,11 @@ compile:
 clean:
 	@if exist $(BUILD_DIR) rmdir /s /q $(BUILD_DIR)
 	@if exist $(OBJ_DIR) rmdir /s /q $(OBJ_DIR)
-	@echo Done Cleaing.
+	@echo Done Cleaning.
 	
 $(OBJ_DIR)/%.c.o: %.c
 	$(CC) $< $(CFLAGS) -c -o $@ $(DEFINES) $(INCLUDE_FLAGS)
+
+$(OBJ_DIR)/%.cpp.o: %.cpp
+	$(CXX) $< $(CXXFLAGS) -c -o $@ $(DEFINES) $(INCLUDE_FLAGS)
 	

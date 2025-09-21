@@ -45,7 +45,7 @@
 static void* _blxInitList(unsigned long elementSize, unsigned long intitialSize)
 {
     char* list = (char*)malloc(_BLX_HEADER_SIZE + intitialSize * elementSize);
-    unsigned long* header = list;
+    unsigned long* header = (unsigned long*)list;
     header[_BLX_MAX_LENGTH_I] = intitialSize;
     header[_BLX_COUNT_I] = 0;
     header[_BLX_ELEMENT_SIZE_I] = elementSize;

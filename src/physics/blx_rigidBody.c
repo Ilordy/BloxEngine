@@ -1,20 +1,22 @@
 #include "blx_rigidBody.h"
 
+//TODO: Fix this file...
+
 void blxRigidBody_Init(blxRigidBody* body, const blxTransform* gameObject)
 {
-    body->transform = *gameObject;
+    //body->transform = *gameObject;
     body->velocity = BLX_VEC3_ZERO;
     body->acceleration = BLX_VEC3_ZERO;
     body->forceAccumulator = BLX_VEC3_ZERO;
 
     // Default damping value (no damping)
-    body->damping = 1.0f;
+    //body->damping = 1.0f;
 
     // Default to unit mass (1.0f), which means mass = 1.0f
     body->inverseMass = 1.0f;
 
     // Add the rigid body to the physics world.
-    AddRigidBodyToPhysicsWorld(body);
+    //AddRigidBodyToPhysicsWorld(body);
 }
 
  // Transform the inverse inertia tensor from local space to world space.

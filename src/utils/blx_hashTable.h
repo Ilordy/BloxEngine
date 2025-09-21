@@ -6,17 +6,12 @@
 
 #include <vcruntime_string.h>
 
-#ifndef HASHTABLE_MEM_TAG
-#define HASHTABLE_MEM_TAG BLXMEMORY_TAG_DICT
-#endif
-
 #define BLX_DEFAULT_HASH_TABLE_SIZE 97
 
 // TODO: Add support for assertsions.
 // TODO: Add support for memory arenas.
 // TODO: Consider using a blx_vList instead of a linkedlist.
 // TODO: Refactor
-// TODO: Use internal linked list instead of using the linked list header file.
 
 /// @brief Hashes a given key. (Not suited for arrays).
 /// @param key The key to hash.
@@ -64,9 +59,9 @@ static uint64 blxToHash(void* key, uint64 size);
 #define blxAddToHashTableAllocA(table, keyToAdd, valueToAdd)\
 {\
     blxLinkedNode* target = _blxLinkedNodeFromHashKey(table, &keyToAdd);\
-    typeof(keyToAdd)* keyPtr = (typeof(keyToAdd)*)blxAllocate(sizeof(keyToAdd), HASHTABLE_MEM_TAG);\
+    typeof(keyToAdd)* keyPtr = (typeof(keyToAdd)*)malloc(sizeof(keyToAdd));\
     blxMemCpy(keyPtr, &keyToAdd, sizeof(keyToAdd));\
-    typeof(valueToAdd)* valuePtr = (typeof(valueToAdd)*)blxAllocate(sizeof(valueToAdd), HASHTABLE_MEM_TAG);\
+    typeof(valueToAdd)* valuePtr = (typeof(valueToAdd)*)malloc(sizeof(valueToAdd));\
     blxMemCpy(valuePtr, &valueToAdd, sizeof(valueToAdd));\
     if(target)\
     {\
@@ -97,9 +92,9 @@ static uint64 blxToHash(void* key, uint64 size);
     typeof(keyToAdd) keyTarget = keyToAdd;\
     typeof(valueToAdd) valueTarget = valueToAdd;\
     blxLinkedNode* target = _blxLinkedNodeFromHashKey(table, &keyTarget);\
-    typeof(keyToAdd)* keyPtr = (typeof(keyToAdd)*)blxAllocate(sizeof(keyToAdd), HASHTABLE_MEM_TAG);\
+    typeof(keyToAdd)* keyPtr = (typeof(keyToAdd)*)malloc(sizeof(keyToAdd));\
     blxMemCpy(keyPtr, &keyTarget, sizeof(keyToAdd));\
-    typeof(valueToAdd)* valuePtr = (typeof(valueToAdd)*)blxAllocate(sizeof(valueToAdd), HASHTABLE_MEM_TAG);\
+    typeof(valueToAdd)* valuePtr = (typeof(valueToAdd)*)malloc(sizeof(valueToAdd));\
     blxMemCpy(valuePtr, &valueTarget, sizeof(valueToAdd));\
     if(target)\
     {\
@@ -212,39 +207,24 @@ static void blxAddToHashTable(blxHashTable* table, void* key, void* value)
     uint64 index;
     _BLXTABLE_GET_BUCKET_INDEX(table, key, &index);
     blxLinkedNode* head = table->_buckets[index];
-
-    // If the head is empty or null then we can just set the value at the head node.
-    if (head->value == NULL || !((blxHashTableEntry*)head->value)->inUse)
+    blxLinkedNode* currentNode = head;
+    while (currentNode)
     {
-        blxHashTableEntry* entry = (blxHashTableEntry*)blxAllocate(sizeof(blxHashTableEntry), HASHTABLE_MEM_TAG);
-        entry->key = key;
-        entry->value = value;
-        entry->inUse = BLX_TRUE;
-        head->value = entry;
-        return;
-    }
-
-    // Else if the head is in use then we need to iterate through the linked list and find a free node.
-    else {
-        blxLinkedNode* currentNode = head;
-        while (currentNode)
-        {
-            blxHashTableEntry* entry = (blxHashTableEntry*)currentNode->value;
-            if (entry) {
-                if (!entry->inUse)
-                {
-                    entry->key = key;
-                    entry->value = key;
-                    entry->inUse = BLX_TRUE;
-                    return;
-                }
+        blxHashTableEntry* entry = (blxHashTableEntry*)currentNode->value;
+        if (entry) {
+            if (!entry->inUse)
+            {
+                entry->key = key;
+                entry->value = key;
+                entry->inUse = BLX_TRUE;
+                return;
             }
-
-            currentNode = currentNode->next;
         }
+
+        currentNode = currentNode->next;
     }
 
-    // If no free nodes were found create a new one and append it to the end.
+    // If all linked nodes are in use then create a new one and append it to the end.
     blxAppendLinkedNodeLiteral(head, ((blxHashTableEntry) {key, value, BLX_TRUE}));
 }
 
@@ -256,8 +236,8 @@ static void blxFreeHashTable(blxHashTable* table)
         blxFreeLinkedList(table->_buckets[i], BLX_TRUE);
     }
 
-    blxFree(table->_buckets, HASHTABLE_MEM_TAG);
-    blxFree(table, HASHTABLE_MEM_TAG);
+    free(table->_buckets);
+    free(table);
 }
 
 // djb2 hash algorithm.
@@ -278,11 +258,11 @@ static uint64 blxToHash(void* key, uint64 size)
 static blxHashTable* _blxCreateHashTable(uint64 keySize, uint64 valueSize, uint64 tableSize,
     blxBool(*Compare) (void* a, void* b), uint64(*ToHash)(void* key))
 {
-    blxHashTable* ht = (blxHashTable*)blxAllocate(sizeof(blxHashTable), HASHTABLE_MEM_TAG);
+    blxHashTable* ht = (blxHashTable*)malloc(sizeof(blxHashTable));
     ht->_keySize = keySize;
     ht->_valueSize = valueSize;
     ht->KeyCompare = Compare;
-    ht->_buckets = (blxLinkedNode**)blxAllocate(sizeof(blxLinkedNode*) * tableSize, HASHTABLE_MEM_TAG);
+    ht->_buckets = (blxLinkedNode**)malloc(sizeof(blxLinkedNode*) * tableSize);
     for (uint64 i = 0; i < tableSize; i++)
     {
         ht->_buckets[i] = blxCreateLinkedNode(NULL);
@@ -295,7 +275,7 @@ static blxHashTable* _blxCreateHashTable(uint64 keySize, uint64 valueSize, uint6
 static blxLinkedNode* _blxLinkedNodeFromHashKey(blxHashTable* table, const void* key)
 {
     uint64 index;
-    _BLXTABLE_GET_BUCKET_INDEX(table, key, &index);
+    _BLXTABLE_GET_BUCKET_INDEX(table, (void*)key, &index);
     blxLinkedNode* currentNode = table->_buckets[index];
     while (currentNode)
     {
@@ -303,7 +283,7 @@ static blxLinkedNode* _blxLinkedNodeFromHashKey(blxHashTable* table, const void*
         {
             blxHashTableEntry* entry = (blxHashTableEntry*)currentNode->value;
 
-            if (entry->key && table->KeyCompare(entry->key, key))
+            if (entry->key && table->KeyCompare(entry->key, (void*)key))
             {
                 return currentNode;
             }
@@ -324,4 +304,3 @@ static void _blxDeleteFromHashTable(blxHashTable* table, void* key)
 
     ((blxHashTableEntry*)target->value)->inUse = BLX_FALSE;
 }
-

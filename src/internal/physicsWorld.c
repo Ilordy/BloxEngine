@@ -13,6 +13,7 @@ void InitializePhysicsWorld()
     // Initialize the physics world, e.g., set up gravity, collision detection, etc.
     // For now, we just initialize an empty list for particles.
     particleList = blxInitList(blxParticle*);
+    rigidBodyList = blxInitList(blxRigidBody*);
     BLXINFO("Physics World Initialized");
 }
 
