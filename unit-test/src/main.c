@@ -5,7 +5,10 @@
 #include "tests/test_hashTable.h"
 #include "tests/test_linkedList.h"
 #include "tests/test_freeList.h"
+#include "tests/test_cpplist.h"
+#include "tests/test_map.h"
 #include "core/blx_memory.h"
+
 
 int main(void)
 {
@@ -19,7 +22,8 @@ int main(void)
     testHashTable_RegisterTests();
     testLinkedList_RegisterTests();
     testFreeList_RegisterTests();
-
+    testCppList_RegisterTests();
+    testMap_RegisterTests();
     testManager_RunTests();
 
     return 0;

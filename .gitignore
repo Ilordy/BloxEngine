@@ -1,4 +1,7 @@
 .vscode/
+.cache/
+.clangd
+.clang-format
 buildCopy.bat
 compile_commands.json
 bin/

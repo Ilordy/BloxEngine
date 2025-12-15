@@ -26,7 +26,6 @@ typedef struct
 } blxRenderer;
 
 
-
 blxRenderer* renderer;
 static blxBool initialized = BLX_FALSE;
 static blxMesh defaultUIGeometry;

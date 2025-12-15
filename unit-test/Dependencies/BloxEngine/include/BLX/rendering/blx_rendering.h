@@ -23,9 +23,9 @@ typedef struct MaterialGroup {
 typedef struct
 {
     Camera* cam;
-    blxModel models[10];
+    /// @brief A blxList of blxmodel pointers to render.
+    blxModel** modelsList;
     blxModel ui[10];
-    unsigned int modelCount;
     unsigned int uiCount;
     blxDirectionalLight directionalLight;
     blxPointLight pointLights[4];
