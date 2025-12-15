@@ -3,7 +3,17 @@
 #include <stdio.h>
 #define BLX_TRUE 1
 #define BLX_FALSE 0
+
+// TODO: Remove this macro and replace with BLX_FORCE_INLINE instead!
 #define BLXINLINE __forceinline
+
+#if defined(_MSC_VER)
+#define BLX_FORCE_INLINE __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+#define BLX_FORCE_INLINE inline __attribute__((always_inline))
+#else
+#define BLX_FORCE_INLINE inline
+#endif
 
 ///@brief gets number of bytes in a gibibyte.
 #define GIBIBYTES(x) (x * 1024 * 1024 * 1024)
@@ -52,4 +62,14 @@ typedef long long int64;
 #define BLXTYPEOF(x) decltype(x)
 #else
 #define BLXTYPEOF(x) typeof(x)
+#endif
+
+#ifdef __cplusplus
+#define BLXEXTERN_C_START \
+    extern "C" {
+#define BLXEXTERN_C_END \
+    }
+#else
+#define BLXEXTERN_C_START
+#define BLXEXTERN_C_END
 #endif

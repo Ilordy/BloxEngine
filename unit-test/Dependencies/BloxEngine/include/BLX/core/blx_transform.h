@@ -1,6 +1,9 @@
 #pragma once
 #include "core/blx_defines.h"
 #include <cglm/cglm.h>
+#include <cglm/struct/vec3.h>
+
+// TODO: Start slowly using blx math lib instead of cglm.
 
 typedef versor Quaternion;
 
@@ -47,3 +50,27 @@ BLXAPI void blxTransform_SetRotationEuler(blxTransform* trans, vec3 eulers);
 /// @param trans The transform to calculate from.
 /// @param outModel The resulting model matrix.
 BLXAPI void _transform_modelMatrix(blxTransform* trans, mat4 outModel);
+
+/// @brief Transforms a local space position relative to the transform to world space.
+/// @param trans The transform to use for the transformation.
+/// @param localPoint The local point to transform.
+/// @return The transformed world point.
+BLXAPI vec3s blxTrasform_TransformPoint(const blxTransform* trans, const vec3s localPoint);
+
+/// @brief Transforms a world space position to local space relative to the transform.
+/// @param trans The transform to use for the transformation.
+/// @param worldPoint The world point to transform.
+/// @return The transformed local point.
+BLXAPI vec3s blxTransform_InverseTransformPoint(const blxTransform* trans, const vec3s worldPoint);
+
+/// @brief Transform a direction from local space to world space.
+/// @param trans The transform to use for the transformation.
+/// @param direction The local direction to transform.
+/// @return The transformed world direction.
+BLXAPI vec3s blxTransform_TransformDirection(const blxTransform* trans, const vec3s direction);
+
+/// @brief Transforms a direction from world space to local space.
+/// @param trans The transform to use for the transformation.
+/// @param direction The world direction to transform.
+/// @return The transformed local direction.
+BLXAPI vec3s blxTransform_InverseTransformDirection(const blxTransform* trans, const vec3s direction);
