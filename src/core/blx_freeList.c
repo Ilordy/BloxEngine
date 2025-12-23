@@ -59,6 +59,8 @@ void* blxFreeList_GetMem(blxFreeList* freeList, uint64 size)
     BLXASSERT(size > 0 && size <= freeList->size);
 
     uint64 totalSize = size + NODE_SIZE;
+
+    FreeListNode* prev = NULL;
     FreeListNode* currentNode = freeList->head;
 
     while (currentNode != NULL) {
@@ -66,9 +68,14 @@ void* blxFreeList_GetMem(blxFreeList* freeList, uint64 size)
         // If the current node is exactly the size we need, return it.
         if (currentNode->size == size) {
 
-            if (currentNode == freeList->head) {
-                // Move the head to the next node
-                freeList->head = currentNode->next;
+            // Unlink currentNode from freelist
+            if (prev)
+            {
+                prev->next = currentNode->next; // middle or tail
+            }
+            else
+            {
+                freeList->head = currentNode->next; // head
             }
 
             // Return the pointer to the memory block
@@ -89,6 +96,7 @@ void* blxFreeList_GetMem(blxFreeList* freeList, uint64 size)
             return MemStart(newNode);
         }
 
+        prev = currentNode;
         currentNode = currentNode->next;
     }
 
@@ -103,12 +111,12 @@ void* blxFreeList_GetMem(blxFreeList* freeList, uint64 size)
 
 void blxFreeList_FreeMem(blxFreeList* freeList, void* mem)
 {
-    BLXASSERT_MSG((char*)mem >= (char*)freeList->memory + sizeof(blxFreeList) &&
-        (char*)mem < (char*)freeList->memory + sizeof(blxFreeList) + freeList->size,
+    BLXASSERT_MSG((char*)mem >= (char*)freeList->memory && (char*)mem < (char*)freeList->memory + freeList->size,
         "Invalid Memory Pointer given. Memory pointer must be in the range of the free list memory block.");
 
     FreeListNode* node = (char*)mem - NODE_SIZE;
     BLXASSERT(node != NULL);
+    blxZeroMemory(mem, node->size);
 
     FreeListNode* current = freeList->head;
     FreeListNode* prev = NULL;
@@ -143,13 +151,11 @@ void blxFreeList_FreeMem(blxFreeList* freeList, void* mem)
     }
 
     // coalesce with previous node if possible
-    if (prev->next && (char*)prev + prev->size + NODE_SIZE == (char*)node)
+    if (prev && (char*)prev + prev->size + NODE_SIZE == (char*)node)
     {
         prev->size += node->size + NODE_SIZE;
         prev->next = node->next;
     }
-
-    blxZeroMemory(mem, node->size);
 }
 
 uint64 blxFreeList_GetFreeMemCount(blxFreeList* freeList)
