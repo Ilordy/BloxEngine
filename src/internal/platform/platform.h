@@ -75,5 +75,7 @@ blxBool blxPlatform_OpenFilePanel(const char* title, const char* defDirectory, c
 /// This is typically used to present the rendered frame to the screen.
 void blxPlatform_SwapBuffers();
 
+unsigned int blxPlatform_GetProccesorCount();
+
 
 
