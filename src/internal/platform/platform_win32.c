@@ -339,4 +339,11 @@ void blxPlatform_SwapBuffers()
     SwapBuffers(state->hdc);
 }
 
+unsigned int blxPlatform_GetProccesorCount()
+{
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo(&sysinfo);
+    return sysinfo.dwNumberOfProcessors;
+}
+
 #endif
