@@ -11,8 +11,8 @@
 
 
 typedef struct memStat {
-    uint64 totalMemAllocated;
-    uint64 taggedAllocations[_BLXMEMORY_MAX_TAGS];
+    u64 totalMemAllocated;
+    u64 taggedAllocations[_BLXMEMORY_MAX_TAGS];
 }memStat;
 
 static memStat stats;
@@ -35,7 +35,7 @@ void _blxInitMemory()
     blxPlatform_MemSetZero(&stats, sizeof(stats));
 
     // TODO: The amount of memory to allocate should be able to be provided by the user as an option.
-    uint64 memSize = GIBIBYTES(1) / 2;
+    u64 memSize = GIBIBYTES(1) / 2;
 
     void* appMem = blxPlatform_Allocate(memSize);
     freeList = blxFreeList_Create(appMem, memSize);
@@ -46,7 +46,7 @@ void _blxShutDownMemory()
 
 }
 
-void* blxAllocate(uint64 size, blxMemoryTag tag)
+void* blxAllocate(u64 size, blxMemoryTag tag)
 {
     stats.totalMemAllocated += size;
     stats.taggedAllocations[tag] += size;
@@ -61,31 +61,31 @@ void blxFree(void* block, blxMemoryTag tag)
         return;
     }
     
-    uint64 memSize = blxFreeList_GetMemSize(block);
+    u64 memSize = blxFreeList_GetMemSize(block);
     stats.totalMemAllocated -= memSize;
     stats.taggedAllocations[tag] -= memSize;
 
     blxFreeList_FreeMem(freeList, block);
 }
 
-void* blxMemCpy(void* dest, const void* src, uint64 size)
+void* blxMemCpy(void* dest, const void* src, u64 size)
 {
     return blxPlatform_MemCpy(dest, src, size);
 }
 
-void* blxZeroMemory(void* block, uint64 size)
+void* blxZeroMemory(void* block, u64 size)
 {
     return blxPlatform_MemSetZero(block, size);
 }
 
 const char* blxGetMemoryUsage()
 {
-    const uint64 gib = 1024 * 1024 * 1024;
-    const uint64 mib = 1024 * 1024;
-    const uint64 kib = 1024;
+    const u64 gib = 1024 * 1024 * 1024;
+    const u64 mib = 1024 * 1024;
+    const u64 kib = 1024;
 
     char buffer[8000] = "System memory use (tagged):\n";
-    uint64 offset = strlen(buffer);
+    u64 offset = strlen(buffer);
 
     for (unsigned int i = 0; i < _BLXMEMORY_MAX_TAGS; i++)
     {
@@ -122,18 +122,18 @@ const char* blxGetMemoryUsage()
 typedef struct blxMemoryArena
 {
     void* base;
-    uint64 size;
-    uint64 used;
+    u64 size;
+    u64 used;
 } blxMemoryArena;
 
-void blxArena_Init(blxMemoryArena* arena, uint64 size)
+void blxArena_Init(blxMemoryArena* arena, u64 size)
 {
     arena->base = blxPlatform_Allocate(size);
     arena->size = size;
     arena->used = 0;
 }
 
-void* blxArena_Alloc(blxMemoryArena* arena, uint64 size)
+void* blxArena_Alloc(blxMemoryArena* arena, u64 size)
 {
     BLXASSERT_MSG(arena->used + size <= arena->size, "Memory arena out of space!");
 

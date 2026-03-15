@@ -1,8 +1,9 @@
 #include "platform.h"
 
 #ifdef BLXWIN32
-#include "core/blx_input.h"
 #include <Windows.h>
+
+#include "core/blx_input.h"
 #include <windowsx.h>
 #include <time.h>
 #include <GL/glew.h>
@@ -300,7 +301,7 @@ void* blxPlatform_MemCpy(void* dest, const void* src, unsigned long long size)
     return memcpy(dest, src, size);
 }
 
-void blxPlatform_Sleep(uint64 ms)
+void blxPlatform_Sleep(u64 ms)
 {
     Sleep(ms);
 }

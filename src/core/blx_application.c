@@ -114,7 +114,7 @@ blxBool blxRunApplication()
             double remainingSeconds = targetFrameSeconds - frameElapsedTime;
 
             if (remainingSeconds > 0) {
-                uint64 remainingMs = remainingSeconds * 1000;
+                u64 remainingMs = remainingSeconds * 1000;
 
                 // TODO: Add functionality for limiting frames and setting a desired frame rate.
                 blxBool limitFrames = BLX_FALSE;

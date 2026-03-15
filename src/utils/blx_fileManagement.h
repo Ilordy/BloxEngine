@@ -27,12 +27,12 @@ BLXAPI blxBool blxOpenFilePanel(const char* title, const char* defDirectory, con
 /// @param handle Handle to the file to read. 
 /// @param outBufSize Out Buffer Size of the file (Use this to index through the returned buffer).
 /// @return A buffer allocated on the heap MUST BE FREED BY USER! (use: blxFree(buffer, BLXMEMORY_TAG_STRING))
-BLXAPI char* blxFileReadAllText(blxFile* handle, uint64* outBufSize);
+BLXAPI char* blxFileReadAllText(blxFile* handle, u64* outBufSize);
 
 /// @brief Gets the size of a file (only works when reading file in binary mode.)
 /// @param handle The file handle to get the size of.
 /// @return The size of the file in bytes.
-BLXAPI uint64 blxFileGetSize(blxFile* handle);
+BLXAPI u64 blxFileGetSize(blxFile* handle);
 
 /// @brief Checks if a file exists.
 /// @param path The path to the file.
@@ -52,7 +52,7 @@ BLXAPI blxBool blxOpenFile(const char* path, blxFileMode fileMode, blxFile** out
 /// @param lineBuffer A pointer to the buffer to store the line in.
 /// @param outLineLength Length of the line read.
 /// @return True if a line was read, false otherwise.
-BLXAPI blxBool blxFileReadLine(blxFile* handle, uint64 maxLength, char** lineBuffer, uint64* outLineLength);
+BLXAPI blxBool blxFileReadLine(blxFile* handle, u64 maxLength, char** lineBuffer, u64* outLineLength);
 
 /// @brief Closes a file (File will not be able to be interacted with anymore after).
 /// @param file The file to close.

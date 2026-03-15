@@ -46,7 +46,7 @@ void GLDebug(GLenum source, GLenum type, GLuint id,
 }
 // -------
 
-
+     
 void blxInitRenderer(GraphicsAPI graphicsToUse)
 {
     if (!initialized) {
@@ -182,7 +182,7 @@ void blxDraw()
     camera_update(renderer->packet.cam);
     renderer->Draw(&renderer->packet);
     renderer->packet.uiCount = 0;
-    for (uint64 i = 0; i < blxGetListCount(renderer->packet.vlist_materialGroups); i++)
+    for (u64 i = 0; i < blxGetListCount(renderer->packet.vlist_materialGroups); i++)
     {
         MaterialGroup group = renderer->packet.vlist_materialGroups[i];
         blxClearList(group.vlist_meshes);

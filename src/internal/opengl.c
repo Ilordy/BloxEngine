@@ -2,6 +2,7 @@
 #include "rendering/blx_rendering.h"
 #include "core/blx_logger.h"
 #include "core/blx_memory.h"
+#include "rendering/blx_shader.h"
 #include "utils/blx_vlist.h"
 //TODO: Add support for index buffers
 
@@ -84,7 +85,7 @@ static void GenerateDrawCommands(struct MaterialGroup* batch)
     unsigned int vertOffset = 0;
     unsigned int indexOffset = 0;
 
-    for (uint64 i = 0; i < numMeshes; i++)
+    for (u64 i = 0; i < numMeshes; i++)
     {
         glDrawCommand command;
         unsigned int numIndicies = blxGetListCount(batch->vlist_meshes[i].indices);
@@ -105,7 +106,7 @@ void blxGL_Draw(blxRenderPacket* packet)
     glClearColor(0.322f, 0.322f, 0.332f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    for (uint64 i = 0; i < blxGetListCount(packet->vlist_materialGroups); i++)
+    for (u64 i = 0; i < blxGetListCount(packet->vlist_materialGroups); i++)
     {
         MaterialGroup currentBatch = packet->vlist_materialGroups[i];
         glMeshData* batchData = (glMeshData*)currentBatch.renderData;
@@ -120,6 +121,7 @@ void blxGL_Draw(blxRenderPacket* packet)
         blxClearList(drawCommands);
         GenerateDrawCommands(&currentBatch);
 
+        
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * blxGetListCount(currentBatch.indices), currentBatch.indices, GL_DYNAMIC_DRAW);
         glBufferData(GL_ARRAY_BUFFER, sizeof(blxVertex) * blxGetListCount(currentBatch.vertices), currentBatch.vertices, GL_DYNAMIC_DRAW);
         glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(glDrawCommand) * blxGetListCount(drawCommands), drawCommands, GL_DYNAMIC_DRAW);
@@ -129,7 +131,7 @@ void blxGL_Draw(blxRenderPacket* packet)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, batchData->ssbo);
 
         // compute model matrices for each geometry in the batch.
-        for (uint64 i = 0; i < blxGetListCount(currentBatch.geometries); i++)
+        for (u64 i = 0; i < blxGetListCount(currentBatch.geometries); i++)
         {
             mat4 model;
             _transform_modelMatrix(currentBatch.geometries[i].transform, model);
@@ -221,7 +223,7 @@ void blxGL_InitMesh(blxMesh* mesh) {
     glBindVertexArray(0);
     mesh->_meshData = (void*)md;
 }
-
+// TODO: OLD PLS DELETE THIS LATER
 void OpenGLUpdateMesh(blxMesh* mesh)
 {
     glMeshData* md = (glMeshData*)mesh->_meshData;

@@ -38,7 +38,7 @@ static blxBool StrKeyCompare(void* a, void* b)
 }
 
 // TODO: This should be in the blxString header file.
-static uint64 StrToHash(void* key) {
+static u64 StrToHash(void* key) {
     return blxToHash(key, blxStr_Len(key));
 }
 
@@ -51,7 +51,7 @@ static blxHashTable* ReadMtlFile(const char* mtlPath)
     }
     char lineBuffer[512];
     char* p = &lineBuffer;
-    uint64 lineLength;
+    u64 lineLength;
     blxHashTable* matTable = blxCreateHashTableWithHash(const char*, blxMaterial*, StrKeyCompare, StrToHash);
 
     blxMaterial* mat;
@@ -129,7 +129,7 @@ void blxImportModelFromObj(blxModel* outModel, const char* objPath)
 
     char lineBuffer[512];
     char* p = &lineBuffer;
-    uint64 lineLength;
+    u64 lineLength;
     while (blxFileReadLine(objFile, 1024, &p, &lineLength))
     {
         char firstChar = lineBuffer[0];

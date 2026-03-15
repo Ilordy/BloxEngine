@@ -18,7 +18,7 @@ BLXAPI blxBool blxStr_Cmp(const char* a, const char* b);
 /// @brief Calculates the length of a string.
 /// @param str The string whose length is to be calculated.
 /// @return The length of the string.
-BLXAPI uint64 blxStr_Len(const char* str);
+BLXAPI u64 blxStr_Len(const char* str);
 
 /// @brief Checks if a string is null or empty.
 /// @param str The string to check.
@@ -29,7 +29,7 @@ BLXAPI blxBool blxStr_NullOrEmpty(const char* str);
 /// @param dest The string to copy to.
 /// @param src The string to copy from.
 /// @param count The number of characters to copy.
-BLXAPI void blxStrn_Cpy(char* dest, const char* src, uint64 count);
+BLXAPI void blxStrn_Cpy(char* dest, const char* src, u64 count);
 
 /// @brief Trims leading and trailing whitespace from a string.
 /// @param str The string to trim.

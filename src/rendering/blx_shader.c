@@ -89,7 +89,7 @@ Shader blxShader_Create(const char* fragPath, const char* vertPath, GLboolean us
 	blxOpenFile(vertPath, BLX_FILE_MODE_READ, &vertFile);
 
 	// TODO: Refactor this function call later...
-	uint64 fragSize, vertSize;
+	u64 fragSize, vertSize;
 	char* fragSource = blxFileReadAllText(fragFile, &fragSize);
 	BLXWARNING("Fragment Shader Source: %s", fragSource);
 	char* vertSource = blxFileReadAllText(vertFile, &vertSize);
