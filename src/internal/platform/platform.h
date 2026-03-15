@@ -61,7 +61,7 @@ void* blxPlatform_MemCpy(void* dest, const void* src, unsigned long long size);
 
 /// @brief Suspends the execution of the current thread for the specified duration.
 /// @param ms The duration to sleep, in milliseconds.
-void blxPlatform_Sleep(uint64 ms);
+void blxPlatform_Sleep(u64 ms);
 
 /// @brief Opens a file selection dialog.
 /// @param title The title of the dialog.
@@ -74,6 +74,8 @@ blxBool blxPlatform_OpenFilePanel(const char* title, const char* defDirectory, c
 /// @brief Swaps the front and back buffers for rendering.
 /// This is typically used to present the rendered frame to the screen.
 void blxPlatform_SwapBuffers();
+
+unsigned int blxPlatform_GetProccesorCount();
 
 
 

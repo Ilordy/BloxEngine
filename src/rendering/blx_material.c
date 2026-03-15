@@ -66,7 +66,7 @@ blxBool StringCompare(void* a, void* b)
 }
 
 // TODO: This should be in the blxString header file.
-uint64 StrToHash(void* key) {
+u64 StrToHash(void* key) {
     return blxToHash(key, blxStr_Len(key));
 }
 
@@ -86,7 +86,7 @@ void _blxMaterialSetValues(blxMaterial* mat)
 {
     MaterialData* matData = (MaterialData*)mat->_internalData;
 
-    for (uint64 i = 0; i < blxGetListCount(matData->properties); i++)
+    for (u64 i = 0; i < blxGetListCount(matData->properties); i++)
     {
         blxMaterialProperty prop = matData->properties[i];
         switch (prop.propertyType)
@@ -155,7 +155,7 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
 
     char buffer[512];
     char* p = &buffer;
-    uint64 lineLength;
+    u64 lineLength;
     Shader matShader = -1;
     char vertPath[blxMaxFilePath] = BLX_EMPTY_STRING;
     char fragPath[blxMaxFilePath] = BLX_EMPTY_STRING;
@@ -238,7 +238,7 @@ blxBool LoadAndParseBmtFile(const char* path, blxMaterial* mat)
                 }
 
                 char variableBuffer[32];
-                for (uint64 i = 0; i < 32; i++)
+                for (u64 i = 0; i < 32; i++)
                 {
                     char nextChar = buffer[i + 1];
 
@@ -359,7 +359,7 @@ void blxMaterial_SetValue(blxMaterial* mat, const char* propName, blxMaterialPro
     
     blxMaterialProperty* prop;
     //TODO: This should be done with a hashtable, swap the properties list with a hashtable..
-    for (uint64 i = 0; i < blxGetListCount(matData->properties); i++)
+    for (u64 i = 0; i < blxGetListCount(matData->properties); i++)
     {
         if (blxStr_Cmp(propName, matData->properties[i].propertyName))
         {

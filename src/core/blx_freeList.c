@@ -10,7 +10,7 @@ typedef struct FreeListNode {
 
     /// @brief Size of the memory block in bytes
     /// @note This size does not include the size of the FreeListNode itself.
-    uint64 size;
+    u64 size;
 } FreeListNode;
 
 typedef struct blxFreeList {
@@ -18,7 +18,7 @@ typedef struct blxFreeList {
     void* memory;
 
     /// @brief Total size of the memory block allocated for the free list.
-    uint64 size;
+    u64 size;
 
     /// @brief Head of the linked list of free memory blocks.
     FreeListNode* head;
@@ -35,7 +35,7 @@ typedef struct blxFreeList {
 /// @param node Pointer to the FreeListNode
 #define MemEnd(node) (MemStart(node) + node->size)
 
-blxFreeList* blxFreeList_Create(void* memory, uint64 size)
+blxFreeList* blxFreeList_Create(void* memory, u64 size)
 {
     BLXASSERT(size > sizeof(blxFreeList) + NODE_SIZE);
 
@@ -54,11 +54,11 @@ blxFreeList* blxFreeList_Create(void* memory, uint64 size)
     return freeList;
 }
 
-void* blxFreeList_GetMem(blxFreeList* freeList, uint64 size)
+void* blxFreeList_GetMem(blxFreeList* freeList, u64 size)
 {
     BLXASSERT(size > 0 && size <= freeList->size);
 
-    uint64 totalSize = size + NODE_SIZE;
+    u64 totalSize = size + NODE_SIZE;
 
     FreeListNode* prev = NULL;
     FreeListNode* currentNode = freeList->head;
@@ -158,11 +158,11 @@ void blxFreeList_FreeMem(blxFreeList* freeList, void* mem)
     }
 }
 
-uint64 blxFreeList_GetFreeMemCount(blxFreeList* freeList)
+u64 blxFreeList_GetFreeMemCount(blxFreeList* freeList)
 {
     // Loop through the free list and sum the sizes of all the nodes
     // to get the total amount of free memory in the free list.
-    uint64 memCount = 0;
+    u64 memCount = 0;
     FreeListNode* currentNode = freeList->head;
     while (currentNode) {
         memCount += currentNode->size;
@@ -172,7 +172,7 @@ uint64 blxFreeList_GetFreeMemCount(blxFreeList* freeList)
     return memCount;
 }
 
-uint64 blxFreeList_GetMemCount(blxFreeList* freeList) {
+u64 blxFreeList_GetMemCount(blxFreeList* freeList) {
     return freeList->size - blxFreeList_GetFreeMemCount(freeList);
 }
 
@@ -180,11 +180,11 @@ void blxFreeList_Clear(blxFreeList** freeList) {
     *freeList = blxFreeList_Create((*freeList)->memory, (*freeList)->size);
 }
 
-uint64 blxFreeList_GetInternalSize() {
+u64 blxFreeList_GetInternalSize() {
     return sizeof(blxFreeList) + NODE_SIZE;
 }
 
-uint64 blxFreeList_GetMemSize(void* mem)
+u64 blxFreeList_GetMemSize(void* mem)
 {
     BLXASSERT(mem != NULL);
     return ((FreeListNode*)((char*)mem - NODE_SIZE))->size;

@@ -29,7 +29,7 @@ blxBool blxStr_Cmp(const char* a, const char* b)
     return strcmp(a, b) == 0;
 }
 
-uint64 blxStr_Len(const char* str)
+u64 blxStr_Len(const char* str)
 {
     return strlen(str);
 }
@@ -39,7 +39,7 @@ blxBool blxStr_NullOrEmpty(const char* str)
     return str && !str[0];
 }
 
-void blxStrn_Cpy(char* dest, const char* src, uint64 count)
+void blxStrn_Cpy(char* dest, const char* src, u64 count)
 {
     strncpy(dest, src, count);
     dest[count] = '\0';

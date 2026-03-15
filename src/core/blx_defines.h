@@ -22,6 +22,15 @@
 ///@brief gets number of bytes in a kibibyte.
 #define KIBIBYTES(x) (x * 1024)
 
+///@brief Align address to 8 bytes.
+#define BLXALIGN_8 alignas(8)
+///@brief Align address to 16 bytes.
+#define BLXALIGN_16 alignas(16)
+///@brief Align address to 32 bytes.
+#define BLXALIGN_32 alignas(32)
+///@brief Align address to 64 bytes.
+#define BLXALIGN_64 alignas(64)
+
 // TODO: These should be moved to their own math header file.
 #define Vec3_Up (vec3){0.0f, 1.0f, 0.0f}
 #define Vec3_Forward (vec3){0.0f, 0.0f, -1.0f} //Negated due to openGL being a right handed coord system. 
@@ -31,8 +40,10 @@
 #define PRINTVEC2(vec) printf("(%f, %f)\n", vec[0], vec[1])
 #define PRINTVEC2S(vec) printf("(%f, %f)\n", vec.x, vec.y)
 typedef unsigned char blxBool;
-typedef unsigned long long uint64;
-typedef long long int64;
+typedef unsigned long long u64;
+typedef unsigned int u32;
+typedef int i32;
+typedef long long i64;
 
 #ifdef BLXEXPORT
 #ifdef _MSC_VER

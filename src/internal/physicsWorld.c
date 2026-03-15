@@ -40,7 +40,7 @@ void UpdatePhysicsWorld(float dt)
 {
     // Update the physics world, e.g., integrate particle positions, handle collisions, etc.
 
-    for (uint64 i = 0; i < blxGetListCount(rigidBodyList); i++)
+    for (u64 i = 0; i < blxGetListCount(rigidBodyList); i++)
     {
         blxRigidBody* body = rigidBodyList[i];
 
@@ -86,7 +86,7 @@ void UpdatePhysicsWorld(float dt)
 
     return;
 
-    for (uint64 i = 0; i < blxGetListCount(particleList); i++)
+    for (u64 i = 0; i < blxGetListCount(particleList); i++)
     {
         blxParticle* particle = particleList[i];
 

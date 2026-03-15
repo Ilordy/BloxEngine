@@ -23,6 +23,12 @@ typedef enum blxMemoryTag {
     BLXMEMORY_TAG_MATERIAL,
     /// @brief Memory used for physics data.
     BLXMEMORY_TAG_PHYSICS,
+    /// @brief Memory used for temporary allocations.
+    BLXMEMORY_TAG_ARENA,
+    /// @brief Memory used for smart pointers. SUBJECT TO CHANGE
+    BLXMEMORY_TAG_SMARTPTR,
+    /// @brief Memory used for job system allocations.
+    BLXMEMORY_TAG_JOBS,
 
     _BLXMEMORY_MAX_TAGS
 } blxMemoryTag;
@@ -31,7 +37,7 @@ typedef enum blxMemoryTag {
 /// @param size The size of the block to allocate.
 /// @param tag Memory tag to associate with this allocation.
 /// @return A pointer to the allocated memory.
-BLXAPI void* blxAllocate(uint64 size, blxMemoryTag tag);
+BLXAPI void* blxAllocate(u64 size, blxMemoryTag tag);
 
 /// @brief Frees a previously allocated block of memory.
 /// @param block Pointer to the memory block to free.
@@ -43,13 +49,13 @@ BLXAPI void blxFree(void* block, blxMemoryTag tag);
 /// @param src Source memory block.
 /// @param size Number of bytes to copy.
 /// @return A pointer to the destination memory block.
-BLXAPI void* blxMemCpy(void* dest, const void* src, uint64 size);
+BLXAPI void* blxMemCpy(void* dest, const void* src, u64 size);
 
 /// @brief Fills a block of memory with zeros.
 /// @param block Pointer to the memory block to zero out.
 /// @param size The size of the block to zero.
 /// @return A pointer to the zeroed memory block.
-BLXAPI void* blxZeroMemory(void* block, uint64 size);
+BLXAPI void* blxZeroMemory(void* block, u64 size);
 
 /// @brief Retrieves a string representation of current memory usage statistics.
 /// @return A constant string containing memory usage details.

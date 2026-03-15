@@ -50,21 +50,21 @@ namespace BlxMem
         }
     }
 
-    /// @brief Allocates memory and constructs an object of type T in that memory.
+    /// @brief Allocates memory and constructs an object of type T in that memory with specified args.
     /// @tparam T The type of object to create.
     /// @tparam ...Args The types of arguments to forward to the constructor.
-    /// @param ...args The arguments to forward to the constructor of T.
     /// @param tag Memory tag to associate with this allocation.
+    /// @param ...args The arguments to forward to the constructor of T.
     /// @return A pointer to the newly created object.
     template <typename T, typename... Args>
-    static T* New(blxMemoryTag tag = BLXMEMORY_TAG_APPLICATION, Args&&... args)
+    static T* New(blxMemoryTag tag, Args&&... args)
     {
         void* mem = blxAllocate(sizeof(T), tag);
         return ConstructAt(static_cast<T*>(mem), std::forward<Args>(args)...);
     }
 
     template <typename T>
-    static T* NewArray(uint64 count, blxMemoryTag tag = BLXMEMORY_TAG_APPLICATION)
+    static T* NewArray(u64 count, blxMemoryTag tag = BLXMEMORY_TAG_APPLICATION)
     {
         T* mem = (T*)blxAllocate(sizeof(T) * count, tag);
         // value-initialize each element (calls default ctor or zero-inits POD)
@@ -76,7 +76,7 @@ namespace BlxMem
     }
 
     template <typename T>
-    static void DeleteArray(T* arr, uint64 count, blxMemoryTag tag = BLXMEMORY_TAG_APPLICATION)
+    static void DeleteArray(T* arr, u64 count, blxMemoryTag tag = BLXMEMORY_TAG_APPLICATION)
     {
         BLXASSERT(arr != nullptr)
         DestructRange(arr, arr + count);

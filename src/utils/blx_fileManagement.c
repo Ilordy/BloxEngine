@@ -60,11 +60,11 @@ void blxCloseFile(blxFile* file)
 }
 
 
-uint64 blxFileGetSize(blxFile* handle)
+u64 blxFileGetSize(blxFile* handle)
 {
     BLXASSERT(handle != NULL);
 
-    uint64 size;
+    u64 size;
     fseek((FILE*)handle, 0, SEEK_END);
     size = ftell((FILE*)handle);
     rewind((FILE*)handle);
@@ -72,17 +72,17 @@ uint64 blxFileGetSize(blxFile* handle)
 }
 
 // TODO: Memory should be provided by user...
-char* blxFileReadAllText(blxFile* handle, uint64* outBufSize)
+char* blxFileReadAllText(blxFile* handle, u64* outBufSize)
 {
     BLXASSERT(handle != NULL);
 
-    uint64 size = blxFileGetSize(handle);
+    u64 size = blxFileGetSize(handle);
     char* buffer = blxAllocate(size, BLXMEMORY_TAG_STRING);
     *outBufSize = fread(buffer, sizeof(char), size, (FILE*)handle);
     return buffer;
 }
 
-blxBool blxFileReadLine(blxFile* handle, uint64 maxLength, char** lineBuffer, uint64* outLineLength)
+blxBool blxFileReadLine(blxFile* handle, u64 maxLength, char** lineBuffer, u64* outLineLength)
 {
     BLXASSERT(handle != NULL);
     BLXASSERT(lineBuffer != NULL);

@@ -17,7 +17,7 @@
 /// @param key The key to hash.
 /// @param size The size of the key.
 /// @return The hashed key.
-static uint64 blxToHash(void* key, uint64 size);
+static u64 blxToHash(void* key, u64 size);
 
 /// @brief Creates a new hash table with the default size and hashing function (default hash does not work with arrays).
 /// @param keyType The type the hash table keys will be.
@@ -147,13 +147,13 @@ typedef struct {
     blxLinkedNode** _buckets;
     /// @brief Size of key type,
     ///does not take into account buffer sizes.
-    uint64 _keySize;
+    u64 _keySize;
     /// @brief Size of value type,
     ///does not take into account buffer sizes.
-    uint64 _valueSize;
-    uint64 tableArraySize;
+    u64 _valueSize;
+    u64 tableArraySize;
     blxBool(*KeyCompare) (void* a, void* b);
-    uint64(*ToHash) (void* key);
+    u64(*ToHash) (void* key);
 }blxHashTable;
 
 /// @brief Checks if a certain key exists in the hash table.
@@ -169,7 +169,7 @@ static blxBool blxHashTableKeyExist(blxHashTable* table, void* key, void* outVal
         return BLX_FALSE;
     }
 
-    uint64 index;
+    u64 index;
     _BLXTABLE_GET_BUCKET_INDEX(table, key, &index);
     blxLinkedNode* currentNode = table->_buckets[index];
     while (currentNode)
@@ -204,7 +204,7 @@ static void blxAddToHashTable(blxHashTable* table, void* key, void* value)
         return;
     }
 
-    uint64 index;
+    u64 index;
     _BLXTABLE_GET_BUCKET_INDEX(table, key, &index);
     blxLinkedNode* head = table->_buckets[index];
     blxLinkedNode* currentNode = head;
@@ -231,7 +231,7 @@ static void blxAddToHashTable(blxHashTable* table, void* key, void* value)
 /// @brief Frees all allocated memory from given table.
 static void blxFreeHashTable(blxHashTable* table)
 {
-    for (uint64 i = 0; i < table->tableArraySize; i++)
+    for (u64 i = 0; i < table->tableArraySize; i++)
     {
         blxFreeLinkedList(table->_buckets[i], BLX_TRUE);
     }
@@ -242,28 +242,28 @@ static void blxFreeHashTable(blxHashTable* table)
 
 // djb2 hash algorithm.
 // https://theartincode.stanis.me/008-djb2/
-static uint64 blxToHash(void* key, uint64 size)
+static u64 blxToHash(void* key, u64 size)
 {
     //Try regular char* version.
     const uint8_t* data = (const uint8_t*)key;
     uint32_t hash = 5381; // Initial hash value
 
-    for (uint64 i = 0; i < size; ++i) {
+    for (u64 i = 0; i < size; ++i) {
         hash = ((hash << 5) + hash) + data[i];
     }
 
     return hash;
 }
 
-static blxHashTable* _blxCreateHashTable(uint64 keySize, uint64 valueSize, uint64 tableSize,
-    blxBool(*Compare) (void* a, void* b), uint64(*ToHash)(void* key))
+static blxHashTable* _blxCreateHashTable(u64 keySize, u64 valueSize, u64 tableSize,
+    blxBool(*Compare) (void* a, void* b), u64(*ToHash)(void* key))
 {
     blxHashTable* ht = (blxHashTable*)malloc(sizeof(blxHashTable));
     ht->_keySize = keySize;
     ht->_valueSize = valueSize;
     ht->KeyCompare = Compare;
     ht->_buckets = (blxLinkedNode**)malloc(sizeof(blxLinkedNode*) * tableSize);
-    for (uint64 i = 0; i < tableSize; i++)
+    for (u64 i = 0; i < tableSize; i++)
     {
         ht->_buckets[i] = blxCreateLinkedNode(NULL);
     }
@@ -274,7 +274,7 @@ static blxHashTable* _blxCreateHashTable(uint64 keySize, uint64 valueSize, uint6
 
 static blxLinkedNode* _blxLinkedNodeFromHashKey(blxHashTable* table, const void* key)
 {
-    uint64 index;
+    u64 index;
     _BLXTABLE_GET_BUCKET_INDEX(table, (void*)key, &index);
     blxLinkedNode* currentNode = table->_buckets[index];
     while (currentNode)
