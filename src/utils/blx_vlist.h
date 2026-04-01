@@ -32,7 +32,7 @@
 ///@brief Adds an array of values to the list.
 #define blxAddArrayToList(list, array, arrayCount)\
 {\
-    for (uint64 i = 0; i < arrayCount; i++)\
+    for (u64 i = 0; i < arrayCount; i++)\
     {\
         blxAddValueToList(list, array[i]);\
     }\

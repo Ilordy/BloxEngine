@@ -24,14 +24,14 @@ namespace BlxStl
         /// @brief The underlying array storing the elements.
         T* data;
         /// @brief The current allocated size of the array.
-        uint64 size;
+        u64 size;
         /// @brief The current number of elements in the list.
-        uint64 count;
+        u64 count;
 
-        void ReAlloc(uint64 newSize)
+        void ReAlloc(u64 newSize)
         {
             T* newData = (T*)blxAllocate(sizeof(T) * newSize, BLXMEMORY_TAG_LIST);
-            for (uint64 i = 0; i < count; i++)
+            for (u64 i = 0; i < count; i++)
             {
                 // Calls move assignment operator if available,
                 BlxMem::ConstructAt(&newData[i], std::move(data[i]));
@@ -47,7 +47,7 @@ namespace BlxStl
       public:
         /// @brief Constructor to create a list with an optional reserved size.
         /// @param reservedSize The initial reserved size of the list.
-        List(uint64 reservedSize = 2) : size(reservedSize), count(0)
+        List(u64 reservedSize = 2) : size(reservedSize), count(0)
         {
             data = (T*)blxAllocate(sizeof(T) * reservedSize, BLXMEMORY_TAG_LIST);
         }
@@ -56,7 +56,7 @@ namespace BlxStl
         List(const List& other) : size(other.size), count(other.count)
         {
             data = (T*)blxAllocate(sizeof(T) * size, BLXMEMORY_TAG_LIST);
-            for (uint64 i = 0; i < count; i++)
+            for (u64 i = 0; i < count; i++)
             {
                 BlxMem::ConstructAt(&data[i], other.data[i]);
             }
@@ -81,7 +81,7 @@ namespace BlxStl
                 size = other.size;
                 count = other.count;
                 data = (T*)blxAllocate(sizeof(T) * size, BLXMEMORY_TAG_LIST);
-                for (uint64 i = 0; i < count; i++)
+                for (u64 i = 0; i < count; i++)
                 {
                     BlxMem::ConstructAt(&data[i], other.data[i]);
                 }
@@ -115,13 +115,13 @@ namespace BlxStl
             blxFree((void*)data, BLXMEMORY_TAG_LIST);
         }
 
-        inline const T& operator[](uint64 index) const
+        inline const T& operator[](u64 index) const
         {
             BLXASSERT(index < count);
             return data[index];
         }
 
-        inline T& operator[](uint64 index)
+        inline T& operator[](u64 index)
         {
             BLXASSERT(index < count);
             return data[index];
@@ -179,9 +179,17 @@ namespace BlxStl
         }
 
         /// @brief Gets the current number of elements in the list.
-        inline uint64 Count() const
+        inline u64 Count() const
         {
             return count;
+        }
+
+        /// @brief Clears the list by calling destructors on all elements and resetting count to zero.
+        /// @note This does not change the allocated size of the list.
+        void Clear()
+        {
+            BlxMem::DestructRange(data, data + count);
+            count = 0;
         }
     };
 } // namespace BlxStl
