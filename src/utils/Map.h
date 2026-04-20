@@ -17,7 +17,7 @@ namespace BlxStl
     template <typename T>
     struct Hash
     {
-        uint64 operator()(const T& key)
+        u64 operator()(const T& key)
         {
             return std::hash<T>()(key);
         }
@@ -62,19 +62,19 @@ namespace BlxStl
 
       private:
         KeyValuePair** buckets;
-        uint64 bucketCount;
+        u64 bucketCount;
         Hasher hasher;
         Equal equalTo;
 
       public:
-        Map(uint64 size = BLX_DEFAULT_HASH_TABLE_SIZE) : bucketCount(size)
+        Map(u64 size = BLX_DEFAULT_HASH_TABLE_SIZE) : bucketCount(size)
         {
             buckets = BlxMem::NewArray<KeyValuePair*>(bucketCount, BLXMEMORY_TAG_DICT);
         }
 
         ~Map()
         {
-            for (uint64 i = 0; i < bucketCount; i++)
+            for (u64 i = 0; i < bucketCount; i++)
             {
                 KeyValuePair* current = buckets[i];
                 while (current)
@@ -90,7 +90,7 @@ namespace BlxStl
 
         const V* Find(const K& key) const
         {
-            uint64 index = hasher(key) % bucketCount;
+            u64 index = hasher(key) % bucketCount;
             KeyValuePair* current = buckets[index];
             while (current)
             {
@@ -105,7 +105,7 @@ namespace BlxStl
 
         const V* Find(const K* key) const
         {
-            uint64 index = hasher(*key) % bucketCount;
+            u64 index = hasher(*key) % bucketCount;
             KeyValuePair* current = buckets[index];
             while (current)
             {
@@ -120,7 +120,7 @@ namespace BlxStl
 
         V* Find(const K& key)
         {
-            uint64 index = hasher(key) % bucketCount;
+            u64 index = hasher(key) % bucketCount;
             KeyValuePair* current = buckets[index];
             while (current)
             {
@@ -135,7 +135,7 @@ namespace BlxStl
 
         V* Find(const K* key)
         {
-            uint64 index = hasher(*key) % bucketCount;
+            u64 index = hasher(*key) % bucketCount;
             KeyValuePair* current = buckets[index];
             while (current)
             {
@@ -158,6 +158,18 @@ namespace BlxStl
             return Find(key) != nullptr;
         }
 
+        inline bool TryGetValue(const K& key, V& outValue)
+        {
+            V* value = Find(key);
+            if (value)
+            {
+                outValue = *value;
+                return true;
+            }
+
+            return false;
+        }
+
         void Add(const K& key, const V& value)
         {
             if (Contains(key))
@@ -167,7 +179,7 @@ namespace BlxStl
                 return;
             }
 
-            uint64 index = hasher(key) % bucketCount;
+            u64 index = hasher(key) % bucketCount;
             KeyValuePair* newNode = BlxMem::New<KeyValuePair>(BLXMEMORY_TAG_DICT, key, value);
             if (!buckets[index])
             {
@@ -193,7 +205,7 @@ namespace BlxStl
                 return;
             }
 
-            uint64 index = hasher(key) % bucketCount;
+            u64 index = hasher(key) % bucketCount;
             KeyValuePair* newNode = BlxMem::New<KeyValuePair>(BLXMEMORY_TAG_DICT, std::move(key), std::move(value));
             if (!buckets[index])
             {
@@ -253,7 +265,7 @@ namespace BlxStl
         //     }
 
         //     V value(std::forward<ValueArgs>(valueArgs)...);
-        //     uint64 index = hasher(key) % bucketCount;
+        //     u64 index = hasher(key) % bucketCount;
 
         //     MapNode* newNode = blxAllocate(sizeof(MapNode), BLXMEMORY_TAG_DICT);
         //     BlxMem::ConstructAt(newNode, key, std::move(value));
@@ -275,7 +287,7 @@ namespace BlxStl
 
         void Remove(const K& key)
         {
-            uint64 index = hasher(key) % bucketCount;
+            u64 index = hasher(key) % bucketCount;
             KeyValuePair* current = buckets[index];
             KeyValuePair* prev = nullptr;
             while (current)
@@ -302,7 +314,7 @@ namespace BlxStl
 
         void Remove(const K* key)
         {
-            uint64 index = hasher(*key) % bucketCount;
+            u64 index = hasher(*key) % bucketCount;
             KeyValuePair* current = buckets[index];
             KeyValuePair* prev = nullptr;
             while (current)

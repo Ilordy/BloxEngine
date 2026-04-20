@@ -1,8 +1,8 @@
 
 // TEMP FOR NOW
+#include "core/blx_string.h"
 extern "C"
 {
-#include "game.h"
 #include "BLX/maths/blx_mat3.h"
 #include "BLX/maths/blx_mat4.h"
 #include "BLX/maths/blx_vec3.h"
@@ -12,6 +12,7 @@ extern "C"
 #include "core/blx_logger.h"
 #include "core/blx_memory.h"
 #include "core/loaders/blx_objLoader.h"
+#include "game.h"
 #include "physics/blx_particle.h"
 #include "rendering/blx_material.h"
 #include "rendering/blx_model.h"
@@ -22,6 +23,9 @@ extern "C"
 
 #include <string.h>
 
+#include "BLX/threading/AtomicInt32.h"
+#include "BLX/threading/AtomicPtr.h"
+#include "BLX/threading/Thread.h"
 #include "BLX/utils/Map.h"
 #include "BLX/utils/list.h"
 
@@ -130,6 +134,38 @@ blxBool IntCmp(void* a, void* b)
     return *((int*)a) == *((int*)b);
 }
 
+void TestThreadFunc(int num1, int num2, const char* message)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        BLXINFO("Thread Message: %s | Numbers: %d, %d | Iteration: %d", message, num1, num2, i);
+        BlxStl::Thread::Sleep(500); // Sleep for 500 milliseconds
+    }
+}
+
+char* msg = (char*)blxAllocate(sizeof(char) * 128, BLXMEMORY_TAG_STRING);
+BlxStl::AtomicPtr<char> atomicMsg(msg);
+
+void AtomicPtrTestFunc()
+{
+    while (*atomicMsg != '\0')
+    {
+        BLXDEBUG("%c", *atomicMsg);
+        atomicMsg.Set(atomicMsg.Value() + sizeof(char)); // Move pointer to next character
+    }
+}
+
+void TestAtomicFunc()
+{
+    blxStr_Cpy(msg, "Offer a bit of caviar to keep Victor coming back; send ten dozen jovial quick - witted chefs to zap big lazy dogs with quartz phlox.");
+
+    BlxStl::Thread thread1(AtomicPtrTestFunc);
+    BlxStl::Thread thread2(AtomicPtrTestFunc);
+
+    thread1.Join();
+    thread2.Join();
+}
+
 blxBool InitGame(blxGameInstance* gameInstance)
 {
     BLXINFO("Application Starting...");
@@ -148,79 +184,13 @@ blxBool InitGame(blxGameInstance* gameInstance)
 
     ballObjects = blxInitListWithSize(blxModel, 100);
 
-    // blxImportModelFromObj(&ballModel, "builtin/geometry/sphere.obj");
+    // BlxStl::Thread testThread("Test Thread 1",
+    //     &TestThreadFunc, 42, 84, "Hello from the thread!");
 
-    // for (int i = 0; i < 100; i++) {
+    // BlxStl::Thread testThread2("Test Thread 2",
+    //     &TestThreadFunc, 100, 200, "Hello from the second thread!");
 
-    //     memcpy(&ballObjects[i], &ballModel, sizeof(blxModel));
-
-    //     BLXDEBUG("Ball %d: %p", i, &ballObjects[i]);
-
-    // }
-
-    blxMat3 mat3 = BLX_MAT3_IDENTITY;
-
-    blxVec3 pos = {{5, 1, 6}};
-
-    pos = blxMat3_MultVec3(mat3, pos);
-
-    mat3.m10 = 5.5f;
-    mat3.raw[2][1] = 2.0f;
-
-    mat3 = blxMat3_Inverse(mat3);
-
-    BLXDEBUG("Transformed Position: %f, %f, %f", pos.x, pos.y, pos.z);
-
-    mat3s cglmmat3;
-    glm_mat3_identity(cglmmat3.raw);
-
-    cglmmat3.m10 = 5.5f;
-    cglmmat3.m21 = 2.0f;
-
-    glm_mat3_inv(cglmmat3.raw, cglmmat3.raw);
-
-    blxVec3 pos2 = {5, 1, 6};
-
-    glm_mat3_mulv(cglmmat3.raw, pos2.raw, pos2.raw);
-
-    BLXDEBUG("Transformed Position: %f, %f, %f", pos2.x, pos2.y, pos2.z);
-
-    blxMat4 mat4 = BLX_MAT4_IDENTITY;
-
-    mat4.m10 = 5.5f;
-    mat4.m21 = 2.0f;
-
-    mat4 = blxMat4_Inverse(mat4);
-
-    mat4s cglmmat4;
-    glm_mat4_identity(cglmmat4.raw);
-    cglmmat4.m10 = 5.5f;
-    cglmmat4.m21 = 2.0f;
-
-    glm_mat4_inv(cglmmat4.raw, cglmmat4.raw);
-
-    BlxStl::Map<Vector3, int> testMap;
-    Vector3 key1(1.0f, 2.0f, 3.0f);
-    Vector3 key2(4.0f, 5.0f, 6.0f);
-    testMap.Add(key1, 100);
-    testMap.Add(key2, 200);
-    if(const int* value = testMap.Find(Vector3(1.0f, 2.0f, 3.0f)); value != nullptr) {
-        BLXDEBUG("Found key1 with value: %d", *value);
-    } else {
-        BLXDEBUG("Key1 not found!");
-    }
-
-    testMap[Vector3(1.0f, 5.0f, 3.0f)] = 350;
-
-    BLXDEBUG("%d", testMap[key1]);
-
-    testMap.Remove(Vector3(1.0f, 2.0f, 3.0f));
-
-    if(!testMap.Contains(Vector3(1.0f, 2.0f, 3.0f))) {
-        BLXDEBUG("Key1 successfully removed.");
-    } else {
-        BLXDEBUG("Key1 still exists!");
-    }
+    TestAtomicFunc();
 
     return BLX_TRUE;
 }
@@ -369,10 +339,15 @@ void SpawnPhysicsObject()
 
     blxModel_Init(&newBall);
     blxRenderableGeometry geometry = {
-        .mesh = ballModel.geometries[0].mesh, .material = blxMaterial_CreateDefault(), .transform = &newBall.transform};
+        .mesh = ballModel.geometries[0].mesh,
+        .material = blxMaterial_CreateDefault(),
+        .transform = &newBall.transform};
 
     vec4s randomColor = {
-        .r = ((float)rand() / RAND_MAX), .g = ((float)rand() / RAND_MAX), .b = ((float)rand() / RAND_MAX), .a = 1.0f};
+        .r = ((float)rand() / RAND_MAX),
+        .g = ((float)rand() / RAND_MAX),
+        .b = ((float)rand() / RAND_MAX),
+        .a = 1.0f};
 
     float randScale = ((float)rand() / RAND_MAX) * (1.5f - 0.2f) + 0.2f; // Scale between 0.2 and 2.0
 

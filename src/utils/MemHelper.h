@@ -1,4 +1,5 @@
 #pragma once
+#include <new>
 #include "core/blx_defines.h"
 
 BLXEXTERN_C_START
@@ -6,9 +7,13 @@ BLXEXTERN_C_START
 #include "utils/blx_assertions.h"
 BLXEXTERN_C_END
 
-#include <new>
-
-
+/**
+ * @brief Placement new operator to construct an object of type T at a specific memory location.
+ * @param memPtr Pointer to the memory location.
+ * @param T The type of object to construct.
+ * @param ...args Constructor arguments.
+ */
+#define BLX_CONSTRUCT(memPtr, T, ...) ::new ((void*)memPtr) T(__VA_ARGS__)
 
 // TODO: THIS SHOULD BE MOVED TO BLX_MEMORY ONCE CONVERTED TO CPP!
 
@@ -62,13 +67,13 @@ namespace BlxMem
         void* mem = blxAllocate(sizeof(T), tag);
         return ConstructAt(static_cast<T*>(mem), std::forward<Args>(args)...);
     }
-
+    
     template <typename T>
     static T* NewArray(u64 count, blxMemoryTag tag = BLXMEMORY_TAG_APPLICATION)
     {
         T* mem = (T*)blxAllocate(sizeof(T) * count, tag);
         // value-initialize each element (calls default ctor or zero-inits POD)
-        for (uint64 i = 0; i < count; ++i)
+        for (u64 i = 0; i < count; ++i)
         {
             ConstructAt(&mem[i]);
         }

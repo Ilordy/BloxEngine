@@ -5,14 +5,15 @@ namespace BlxMath
 {
     struct Vector3
     {
-        float x, y, z;
+        f32 x, y, z;
 
-        Vector3(float scalar) : x(scalar), y(scalar), z(scalar) {}
-        Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
-        Vector3() : x(0), y(0), z(0) {}
+        inline Vector3() : x(0), y(0), z(0) {}
+        inline Vector3(f32 scalar) : x(scalar), y(scalar), z(scalar) {}
+        inline Vector3(f32 x, f32 y, f32 z) : x(x), y(y), z(z) {}
 
-        // copy assignment operator
-        Vector3& operator=(const Vector3& other)
+        inline Vector3(const Vector3& other) : x(other.x), y(other.y), z(other.z) {}
+
+        inline Vector3& operator=(const Vector3& other)
         {
             x = other.x;
             y = other.y;
@@ -20,42 +21,34 @@ namespace BlxMath
             return *this;
         }
 
-        // copy constructor
-        Vector3(const Vector3& other) : x(other.x), y(other.y), z(other.z)
+        inline Vector3& operator+=(const Vector3& other)
         {
-        }
-
-        // move constructor
-        Vector3(Vector3&& other) noexcept : x(other.x), y(other.y), z(other.z)
-        {
-            other.x = 0;
-            other.y = 0;
-            other.z = 0;
-        }
-
-        // move assignment operator
-        Vector3& operator=(Vector3&& other) noexcept
-        {
-            if (this != &other)
-            {
-                x = other.x;
-                y = other.y;
-                z = other.z;
-
-                other.x = 0;
-                other.y = 0;
-                other.z = 0;
-            }
+            x += other.x;
+            y += other.y;
+            z += other.z;
             return *this;
         }
 
-        bool operator==(const Vector3& other) const
+        inline Vector3 operator+(const Vector3& other) const
+        {
+            return Vector3(x + other.x, y + other.y, z + other.z);
+        }
+
+        inline Vector3 operator-(const Vector3& other) const
+        {
+            return Vector3(x - other.x, y - other.y, z - other.z);
+        }
+
+        inline bool operator==(const Vector3& other) const
         {
             return x == other.x && y == other.y && z == other.z;
         }
 
-        ~Vector3()
+        inline void Scale(f32 scalar)
         {
+            x *= scalar;
+            y *= scalar;
+            z *= scalar;
         }
-    }; 
+    };
 } // namespace BlxMath

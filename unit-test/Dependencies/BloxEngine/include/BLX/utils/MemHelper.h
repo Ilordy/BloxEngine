@@ -50,14 +50,14 @@ namespace BlxMem
         }
     }
 
-    /// @brief Allocates memory and constructs an object of type T in that memory.
+    /// @brief Allocates memory and constructs an object of type T in that memory with specified args.
     /// @tparam T The type of object to create.
     /// @tparam ...Args The types of arguments to forward to the constructor.
-    /// @param ...args The arguments to forward to the constructor of T.
     /// @param tag Memory tag to associate with this allocation.
+    /// @param ...args The arguments to forward to the constructor of T.
     /// @return A pointer to the newly created object.
     template <typename T, typename... Args>
-    static T* New(blxMemoryTag tag = BLXMEMORY_TAG_APPLICATION, Args&&... args)
+    static T* New(blxMemoryTag tag, Args&&... args)
     {
         void* mem = blxAllocate(sizeof(T), tag);
         return ConstructAt(static_cast<T*>(mem), std::forward<Args>(args)...);

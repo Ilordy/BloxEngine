@@ -205,43 +205,34 @@ void blxImportModelFromObj(blxModel* outModel, const char* objPath)
                     glm_vec3_copy(normals[v3.normIndex - 1].raw, triangleP3.normal.raw);
 
                     unsigned int vertexIndex;
-                    blxAddValueToList(geoPtr->mesh.vertices, triangleP1);
-                    // vertexIndex = blxGetListCount(geoPtr->mesh.vertices) - 1;
-                    // blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
-
                     if (blxHashTableKeyExist(table, &triangleP1, &vertexIndex)) {
                         printf("HASH VALUE VERTEX INDEX!!!: %d\n", vertexIndex);
                         blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
                     }
                     else {
+                        blxAddValueToList(geoPtr->mesh.vertices, triangleP1);
                         vertexIndex = blxGetListCount(geoPtr->mesh.vertices) - 1;
                         blxAddToHashTableAlloc(table, triangleP1, vertexIndex);
                         blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
                     }
-
-                    blxAddValueToList(geoPtr->mesh.vertices, triangleP2);
-                    // vertexIndex = blxGetListCount(geoPtr->mesh.vertices) - 1;
-                    // blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
 
                     if (blxHashTableKeyExist(table, &triangleP2, &vertexIndex)) {
                         printf("HASH VALUE VERTEX INDEX!!!: %d\n", vertexIndex);
                         blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
                     }
                     else {
+                        blxAddValueToList(geoPtr->mesh.vertices, triangleP2);
                         vertexIndex = blxGetListCount(geoPtr->mesh.vertices) - 1;
                         blxAddToHashTableAlloc(table, triangleP2, vertexIndex);
                         blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
                     }
-
-                    blxAddValueToList(geoPtr->mesh.vertices, triangleP3);
-                    // vertexIndex = blxGetListCount(geoPtr->mesh.vertices) - 1;
-                    // blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
 
                     if (blxHashTableKeyExist(table, &triangleP3, &vertexIndex)) {
                         printf("HASH VALUE VERTEX INDEX!!!: %d\n", vertexIndex);
                         blxAddValueToList(geoPtr->mesh.indices, vertexIndex);
                     }
                     else {
+                        blxAddValueToList(geoPtr->mesh.vertices, triangleP3);
                         vertexIndex = blxGetListCount(geoPtr->mesh.vertices) - 1;
                         blxAddToHashTableAlloc(table, triangleP3, vertexIndex);
                         blxAddValueToList(geoPtr->mesh.indices, vertexIndex);

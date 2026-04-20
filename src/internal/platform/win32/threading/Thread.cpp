@@ -1,4 +1,5 @@
 #include "threading/Thread.h"
+#include "core/blx_defines.h"
 
 
 
@@ -72,7 +73,7 @@ namespace BlxStl
         WaitForSingleObject(impl->hThread, INFINITE);
     }
 
-    void Thread::Sleep(uint32 milliseconds)
+    void Thread::Sleep(u32 milliseconds)
     {
         ::Sleep(milliseconds);
     }

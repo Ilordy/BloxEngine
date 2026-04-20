@@ -23,6 +23,12 @@ typedef enum blxMemoryTag {
     BLXMEMORY_TAG_MATERIAL,
     /// @brief Memory used for physics data.
     BLXMEMORY_TAG_PHYSICS,
+    /// @brief Memory used for temporary allocations.
+    BLXMEMORY_TAG_ARENA,
+    /// @brief Memory used for smart pointers. SUBJECT TO CHANGE
+    BLXMEMORY_TAG_SMARTPTR,
+    /// @brief Memory used for job system allocations.
+    BLXMEMORY_TAG_JOBS,
 
     _BLXMEMORY_MAX_TAGS
 } blxMemoryTag;

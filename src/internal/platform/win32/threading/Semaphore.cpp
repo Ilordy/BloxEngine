@@ -2,7 +2,9 @@
 
 #ifdef BLXWIN32
 #include "threading/Semaphore.h"
+BLXEXTERN_C_START
 #include "utils/blx_assertions.h"
+BLXEXTERN_C_END
 #include <windows.h>
 
 namespace BlxStl

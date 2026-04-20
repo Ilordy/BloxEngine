@@ -184,6 +184,29 @@ namespace BlxStl
             return count;
         }
 
+        void Resize(u64 newSize)
+        {
+            if (newSize < count)
+            {
+                BlxMem::DestructRange(data + newSize, data + count);
+                count = newSize;
+            }
+            else if (newSize > count)
+            {
+                if (newSize > size)
+                {
+                    ReAlloc(newSize);
+                }
+
+                for (u64 i = count; i < newSize; i++)
+                {
+                    BlxMem::ConstructAt(&data[i]);
+                }
+
+                count = newSize;
+            }
+        }
+
         /// @brief Clears the list by calling destructors on all elements and resetting count to zero.
         /// @note This does not change the allocated size of the list.
         void Clear()

@@ -6,6 +6,7 @@
 #include "tests/test_linkedList.h"
 #include "tests/test_freeList.h"
 #include "tests/test_cpplist.h"
+#include "tests/test_smartPointers.h"
 #include "tests/test_map.h"
 #include "core/blx_memory.h"
 
@@ -24,6 +25,8 @@ int main(void)
     testFreeList_RegisterTests();
     testCppList_RegisterTests();
     testMap_RegisterTests();
+    testSmartPointers_RegisterTests();
+
     testManager_RunTests();
 
     return 0;

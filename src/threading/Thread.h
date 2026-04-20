@@ -75,7 +75,7 @@ namespace BlxStl
 
         void Join();
 
-        static void Sleep(uint32 milliseconds);
+        static void Sleep(u32 milliseconds);
 
         ~Thread();
     };
