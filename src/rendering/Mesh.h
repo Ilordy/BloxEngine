@@ -1,3 +1,4 @@
+#pragma once
 #include "core/blx_defines.h"
 #include "maths/Vector3.h"
 #include "maths/Vector2.h"

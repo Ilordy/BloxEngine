@@ -10,9 +10,11 @@ typedef enum {
 typedef void blxFile;
 
 // TODO: Add macros for other platforms.
-#define blxMaxFilePath 0
+
 #ifdef BLXWIN32
 #define blxMaxFilePath 260
+#else
+#error "Platform Not Supported!"
 #endif
 
 /// @brief Displays the Platform specific dialog box for opening a file.

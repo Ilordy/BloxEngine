@@ -34,6 +34,11 @@ u64 blxStr_Len(const char* str)
     return strlen(str);
 }
 
+u64 blxStr_LenWithNull(const char* str)
+{
+    return strlen(str) + 1;
+}
+
 blxBool blxStr_NullOrEmpty(const char* str)
 {
     return str && !str[0];

@@ -7,6 +7,7 @@
 /// @brief Copies a string from one location to another.
 /// @param dest The string to copy to.
 /// @param src The string to copy from.
+/// @note The destination buffer must be large enough to hold the source string, including the null terminator.
 BLXAPI void blxStr_Cpy(const char* dest, const char* src);
 
 /// @brief Compares two strings for equality.
@@ -19,6 +20,14 @@ BLXAPI blxBool blxStr_Cmp(const char* a, const char* b);
 /// @param str The string whose length is to be calculated.
 /// @return The length of the string.
 BLXAPI u64 blxStr_Len(const char* str);
+
+/**
+ * @brief Calculates the length of a string, including the null terminator.
+ * 
+ * @param str The string whose length is to be calculated.
+ * @return The length of the string, including the null terminator. 
+ */
+BLXAPI u64 blxStr_LenWithNull(const char* str);
 
 /// @brief Checks if a string is null or empty.
 /// @param str The string to check.

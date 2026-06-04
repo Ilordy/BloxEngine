@@ -1,12 +1,16 @@
 #include "ObjLoader.h"
 #include "core/blx_defines.h"
+#include "core/blx_memory.h"
+#include <cstddef>
+BLXEXTERN_C_START
 #include "core/blx_logger.h"
 #include "core/blx_string.h"
+#include "utils/blx_fileManagement.h"
+BLXEXTERN_C_END
 #include "maths/Vector3.h"
 #include "utils/List.h"
 #include "utils/Map.h"
 #include "utils/MemHelper.h"
-#include "utils/blx_fileManagement.h"
 #include <cctype>
 #include <cstdlib>
 #include <functional>
@@ -20,17 +24,21 @@ using namespace BlxMath;
 
 namespace BlxCore
 {
-    struct ObjLoader::VertexIndex
+    ObjLoader::ObjLoader(const char* objPath) :
+        objPath((const char*)blxAllocate(blxStr_LenWithNull(objPath) * sizeof(char), BLXMEMORY_TAG_STRING)),
+        vertexToIndexMap(),
+        positions(4096),
+        texCoords(4096),
+        normals(4096)
     {
-        u32 posIndex, texIndex, normIndex;
+        // TODO: Objpath is probably only needed for debug mode.
+        blxStr_Cpy(this->objPath, objPath);
+    }
 
-        VertexIndex() : posIndex(0), texIndex(0), normIndex(0) {}
-
-        bool operator==(const VertexIndex& other) const
-        {
-            return posIndex == other.posIndex && texIndex == other.texIndex && normIndex == other.normIndex;
-        }
-    };
+    ObjLoader::~ObjLoader()
+    {
+        blxFree((void*)objPath, BLXMEMORY_TAG_STRING);
+    }
 
     bool ObjLoader::ParseVertexPosition(const char* line, Vector3& outPosition)
     {
@@ -47,9 +55,26 @@ namespace BlxCore
         return sscanf(line, "vt %f %f", &outTexCoord.x, &outTexCoord.y) == 2;
     }
 
-    BlxStl::List<ObjLoader::VertexIndex> ObjLoader::ParseFace(char* line)
+    i32 ObjLoader::ResolveVertexIndex(i32 objIndex, u32 listSize)
     {
-        BlxStl::List<VertexIndex> vertexIndices;
+        // OBJ format uses 1-based indexing, so we need to subtract 1 from the index.
+        // Negative indices are relative to the end of the list, so we need to add the list size to the index.
+        if (objIndex > 0)
+        {
+            return objIndex - 1;
+        }
+        else if (objIndex < 0)
+        {
+            return objIndex + listSize;
+        }
+
+        // Invalid index
+        return -1;
+    }
+
+    bool ObjLoader::ParseFace(char* line, BlxStl::List<VertexIndex>& outVertexIndices)
+    {
+        outVertexIndices.Clear();
 
         if (line[0] == 'f' && blxStr_Len(line) > 2)
         {
@@ -59,32 +84,71 @@ namespace BlxCore
         char* context;
         while (const char* token = strtok_s(line, " ", &context))
         {
-            u64 tokenLength = blxStr_Len(token);
+            u32 tokenLength = blxStr_Len(token);
             VertexIndex vertexIndex;
-            u64 slashIndex;
+            char* endPtr;
+            u32 slashIndex;
             // TODO: try catch error handling here when we make our own str class.
-            // OBJ format uses 1-based indexing, so we need to subtract 1 from the indices.
-            vertexIndex.posIndex = std::stoi(token, &slashIndex) - 1;
+            // TODO: we can also use strtol to parse the integers and handle the error cases ourselves.
+            i32 posIndex = ResolveVertexIndex(
+                strtol(token, &endPtr, 10),
+                positions.Count());
 
-            // check for vp/vt/vn or vp//vn format
-            if (slashIndex < tokenLength && std::isdigit(token[slashIndex + 1]))
+            if (posIndex == -1)
             {
-                // vp/vt format
-                vertexIndex.texIndex = std::stoi(token + slashIndex + 1, &slashIndex) - 1;
+                BLXERROR("Invalid vertex position index in face definition: %s\n In file: %s", token, objPath);
+                return false;
             }
 
-            else
+            vertexIndex.posIndex = posIndex;
+
+            slashIndex = u32(endPtr - token);
+
+            // Check if there are slashes (v/vt/vn or v//vn format)
+            // If this if statement is not true, then the format is just "v" and we can skip parsing tex coord and normal.
+            if (slashIndex < tokenLength && token[slashIndex] == '/')
             {
-                // vp//vn format, tex coord is 0 by default.
-                // Skip the "//" if there is no tex coord index.
-                slashIndex += 2;
+                /*
+                Move past the first slash
+                f v/vt/vn
+                    ^ = slashIndex (vt)
+                f v//vn
+                    ^ = slashIndex (second '/')
+                */
+                slashIndex++;
+
+                // Parse Tex coord if present
+                if (slashIndex < tokenLength && std::isdigit(token[slashIndex]))
+                {
+                    vertexIndex.texIndex = ResolveVertexIndex(
+                        strtol(token + slashIndex, &endPtr, 10),
+                        texCoords.Count());
+
+                    slashIndex = u32(endPtr - token);
+                }
+
+                /*
+                Move past the second slash
+                f v/vt/vn
+                       ^ = slashIndex (vn)
+                f v//vn
+                     ^ = slashIndex (vn)
+                */
+                slashIndex++;
+
+                // Parse normal if present
+                if (slashIndex < tokenLength && std::isdigit(token[slashIndex]))
+                {
+                    vertexIndex.normIndex = ResolveVertexIndex(
+                        strtol(token + slashIndex, &endPtr, 10),
+                        normals.Count());
+                }
             }
 
-            vertexIndex.normIndex = std::stoi(token + slashIndex + 1) - 1;
-            vertexIndices.Add(vertexIndex);
+            outVertexIndices.Add(vertexIndex);
         }
 
-        return vertexIndices;
+        return true;
     }
 
     void ObjLoader::FanTriangulateFace(BlxStl::List<VertexIndex>& vertexIndices)
@@ -149,6 +213,7 @@ namespace BlxCore
                 char secondChar = lineBuffer[1];
                 switch (secondChar)
                 {
+
                 // Vertex Position
                 case ' ':
                 {
@@ -160,6 +225,7 @@ namespace BlxCore
                     positions.Add(position);
                     break;
                 }
+
                 // Vertex Normal
                 case 'n':
                 {
@@ -171,6 +237,7 @@ namespace BlxCore
                     normals.Add(normal);
                     break;
                 }
+
                 // Vertex Tex Coord
                 case 't':
                 {
@@ -187,11 +254,16 @@ namespace BlxCore
             }
             case 'f':
             {
-                BlxStl::List<VertexIndex> vertexIndices = ParseFace(lineBuffer);
+                BlxStl::List<VertexIndex> vertexIndices;
+                if (!ParseFace(lineBuffer, vertexIndices))
+                {
+                    return false;
+                }
+
                 if (vertexIndices.Count() < 3)
                 {
-                    BLXWARNING("Face with less than 3 vertices found in line: %s\n In file: %s", lineBuffer, objPath);
-                    break;
+                    BLXERROR("Face with less than 3 vertices found in line: %s\n In file: %s", lineBuffer, objPath);
+                    return false;
                 }
 
                 FanTriangulateFace(vertexIndices);
@@ -199,13 +271,6 @@ namespace BlxCore
                 for (u64 i = 0; i < vertexIndices.Count(); ++i)
                 {
                     VertexIndex& vertexIndex = vertexIndices[i];
-
-                    Vector3& position = positions[vertexIndex.posIndex];
-                    Vector2& texCoord = texCoords[vertexIndex.texIndex];
-                    Vector3& normal = normals[vertexIndex.normIndex];
-
-                    BlxRendering::Vertex vertex(position, normal, texCoord);
-
                     u32 index;
                     if (vertexToIndexMap.TryGetValue(vertexIndex, index))
                     {
@@ -215,6 +280,11 @@ namespace BlxCore
                     else
                     {
                         // Vertex does not exist, add it to the vertex list and add the new index to the index list.
+                        Vector3& position = positions[vertexIndex.posIndex];
+                        Vector2& texCoord = texCoords[vertexIndex.texIndex == -1 ? 0 : vertexIndex.texIndex];
+                        Vector3& normal = normals[vertexIndex.normIndex == -1 ? 0 : vertexIndex.normIndex];
+                        BlxRendering::Vertex vertex(position, normal, texCoord);
+
                         vertices.Add(vertex);
                         index = vertices.Count() - 1;
                         vertexToIndexMap[vertexIndex] = index;
@@ -230,19 +300,3 @@ namespace BlxCore
         }
     }
 } // namespace BlxCore
-
-namespace BlxStl
-{
-    template <>
-    struct Hash<BlxCore::ObjLoader::VertexIndex>
-    {
-        u64 operator()(const BlxCore::ObjLoader::VertexIndex& vertex)
-        {
-            u64 hash = 0;
-            hash ^= std::hash<u32>()(vertex.posIndex) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-            hash ^= std::hash<u32>()(vertex.texIndex) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-            hash ^= std::hash<u32>()(vertex.normIndex) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-            return hash;
-        }
-    };
-} // namespace BlxStl

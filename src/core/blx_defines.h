@@ -1,6 +1,5 @@
 #pragma once
 #include "cglm/cglm.h"
-#include <stdio.h>
 #define BLX_TRUE 1
 #define BLX_FALSE 0
 
